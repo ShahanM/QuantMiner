@@ -44,7 +44,7 @@ public class PositionRuleParameters {
     /**
      * Class of parameters for qualitative (categorical) attributes
      */
-    public class ParametresItemsQualitatifs {
+    public static class ParametresItemsQualitatifs {
         
         public int m_iTypePriseEnCompte = 0; // Indicate the position of the item in that rule      
         public boolean m_bPresenceObligatoire = false;  // Indicate if the item must appear que l'item doit  faire partie of that rule
@@ -61,7 +61,7 @@ public class PositionRuleParameters {
     /**
      * Class of parameters for quantitative (numerical) attributes
      */
-    public class ParametresAttributsQuantitatifs {
+    public static class ParametresAttributsQuantitatifs {
         
         public int m_iTypePriseEnCompte = 0; // Indique la position o� placer l'attribut dans la r�gle       
         public boolean m_bPresenceObligatoire = false;  // Indique que l'attribut doit obligatoirement faire partie de la r�gle
@@ -153,7 +153,7 @@ public class PositionRuleParameters {
                                     bEnregistrerParametres = ( m_contexteResolution.ObtenirTypePrisEnCompteItem(colonne.m_sNomColonne, tListeItems[iIndiceItem]) != ResolutionContext.PRISE_EN_COMPTE_ITEM_NULLE_PART );
                                    
                                 if (bEnregistrerParametres) {
-                                    parametreItemDefaut = new ParametresItemsQualitatifs();
+                                    parametreItemDefaut =new ParametresItemsQualitatifs();
                                     
                                     if (m_iTypeParametrage == PARAMETRES_FILTRAGE_REGLES) {
                                         parametreItemDefaut.m_iTypePriseEnCompte = m_contexteResolution.ObtenirTypePrisEnCompteItem(colonne.m_sNomColonne, tListeItems[iIndiceItem]);
@@ -199,7 +199,7 @@ public class PositionRuleParameters {
                             bEnregistrerParametres = ( m_contexteResolution.ObtenirTypePrisEnCompteAttribut(colonne.m_sNomColonne) != ResolutionContext.PRISE_EN_COMPTE_ITEM_NULLE_PART );
                         
                         if (bEnregistrerParametres) {
-                            parametreQuantDefaut = new ParametresAttributsQuantitatifs();
+                            parametreQuantDefaut =new ParametresAttributsQuantitatifs();
                             
                             if (m_iTypeParametrage == PARAMETRES_FILTRAGE_REGLES) {
                                 parametreQuantDefaut.m_iTypePriseEnCompte = m_contexteResolution.ObtenirTypePrisEnCompteAttribut(colonne.m_sNomColonne);
@@ -513,7 +513,6 @@ public class PositionRuleParameters {
              }
         }
         
-        
         // Enumeration of mandatory qualitative attributes
         
         enumAttributs = m_tableParametresItemsQualitatifs.keys();
@@ -539,8 +538,6 @@ public class PositionRuleParameters {
         }
 
     }
-    
-    
     
     /**
      * Reset the table of mandatory presence for a new presence test
@@ -809,11 +806,11 @@ public class PositionRuleParameters {
         while ( bRegleValide && (iEtapeTestRegle<2) ) {
             
             if (iEtapeTestRegle==0) {
-                iNombreItems = regle.m_iNombreItemsGauche;
+                iNombreItems = regle.getLeftItems().size();
                 iTypeTestEtape = ResolutionContext.PRISE_EN_COMPTE_ITEM_GAUCHE;
             }
             else {
-                iNombreItems = regle.m_iNombreItemsDroite;
+                iNombreItems = regle.getRightItems().size();
                 iTypeTestEtape = ResolutionContext.PRISE_EN_COMPTE_ITEM_DROITE;
             }
              

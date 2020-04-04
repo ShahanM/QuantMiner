@@ -33,8 +33,10 @@ public class CsvFileParser {
 	public CsvFileParser(String nomFichier) {
 		try {
 			m_InputStream = new FileInputStream(new File(nomFichier));
+			System.out.println("Got my Input Stream");
 			try {
 				csvParser = new LabeledCSVParser(new ExcelCSVParser(m_InputStream));
+				System.out.println("Got my LabeledCSVParser");
 			} catch (IOException e) {
 				e.printStackTrace();
 			}   
@@ -48,6 +50,7 @@ public class CsvFileParser {
 		
 		try {
 			m_data = csvParser.getAllValues();
+			System.out.println("Got all values");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

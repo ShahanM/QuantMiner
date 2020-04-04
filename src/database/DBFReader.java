@@ -21,11 +21,11 @@ import java.util.*;
 
 public class DBFReader {
 
-	DataInputStream m_dataInputStream = null;
-	int m_iNombreChamps = 0;
-	DBFChamp[] m_champs = null;
-	int m_iTailleEnregistrement = 0;
-	int m_iNombreLignes = 0;
+	private DataInputStream m_dataInputStream;
+	private int m_iNombreChamps = 0;
+	private DBFChamp[] m_champs = null;
+	private int m_iTailleEnregistrement = 0;
+	private int m_iNombreLignes = 0;
 
 	final static int DBF_TYPE_CHAMP_ERRONE = 0;
 	final static int DBF_TYPE_CHAMP_CARAC = 1;
@@ -35,11 +35,11 @@ public class DBFReader {
 	final static int DBF_TYPE_CHAMP_LOGIQUE = 5;
 	final static int DBF_TYPE_CHAMP_MEMO = 6;
 
-	public class DBFChamp {
+	public static class DBFChamp {
 
-		String m_sNom = null;                     //field name
-		int m_iTypeChamp = DBF_TYPE_CHAMP_ERRONE; //field type
-		int m_iTailleChamp = 0;                   //field length
+		String m_sNom;                     //field name
+		int m_iTypeChamp; //field type
+		int m_iTailleChamp;                   //field length
 
 		DBFChamp(String sNom, int iTypeChamp, int iTailleChamp) {
 			m_sNom = sNom;
@@ -228,7 +228,7 @@ public class DBFReader {
 						sNomChamp = new String(tOctetsLus, 0,
 								positionZeroTerminal);
 					else
-						sNomChamp = new String("");
+						sNomChamp = "";
 
 					// Get field's type the 12th byte
 					octetLu = m_dataInputStream.readByte();
@@ -263,7 +263,7 @@ public class DBFReader {
 					IgnorerOctets(m_dataInputStream, 15);
 
 					// create a field and put into field list
-					champ = new DBFChamp(sNomChamp, iTypeChamp, iTailleChamp); //field name, field type and field length
+					champ =new DBFChamp(sNomChamp, iTypeChamp, iTailleChamp); //field name, field type and field length
 					champs.add(champ);  //add to field list
 				} catch (IOException e) {
 				}
@@ -345,7 +345,7 @@ public class DBFReader {
 		int iIndiceChamp = 0;
 		int iTailleChamp = 0;
 		int iTypeChamp = 0;
-		String tValeursChamps[] = null;
+		String[] tValeursChamps= null;
 		String sChaineLue = null;
 
 		if (m_dataInputStream == null)
@@ -393,44 +393,34 @@ public class DBFReader {
 
 					switch (iTypeChamp) {
 
-					case DBF_TYPE_CHAMP_CARAC:
-						tValeursChamps[iIndiceChamp] = new String(tOctetsLus);
-						break;
+						case DBF_TYPE_CHAMP_REEL:
 
-					case DBF_TYPE_CHAMP_DATE:
-						tValeursChamps[iIndiceChamp] = new String(tOctetsLus);
-						break;
-
-					case DBF_TYPE_CHAMP_REEL:
-						tValeursChamps[iIndiceChamp] = (new String(tOctetsLus))
+						case DBF_TYPE_CHAMP_DECIMAL:
+							tValeursChamps[iIndiceChamp] = (new String(tOctetsLus))
 								.trim();
 			
 						break;
 
-					case DBF_TYPE_CHAMP_DECIMAL:
-						tValeursChamps[iIndiceChamp] = (new String(tOctetsLus))
-								.trim();
-				 
-						break;
-
-					case DBF_TYPE_CHAMP_LOGIQUE:
+						case DBF_TYPE_CHAMP_LOGIQUE:
 						if (tOctetsLus[0] == 0x59 || tOctetsLus[0] == 0x79
 								|| tOctetsLus[0] == 0x54
 								|| tOctetsLus[0] == 0x74) // 'Y', 'y', 'T', 't'
-							tValeursChamps[iIndiceChamp] = new String("Vrai");  //True
+							tValeursChamps[iIndiceChamp] = "Vrai";  //True
 						else
-							tValeursChamps[iIndiceChamp] = new String("Faux");  //False
+							tValeursChamps[iIndiceChamp] = "Faux";  //False
 						break;
 
-					default:
+						case DBF_TYPE_CHAMP_CARAC:
+
+						case DBF_TYPE_CHAMP_DATE:
+
+						default:
 						tValeursChamps[iIndiceChamp] = new String(tOctetsLus);
 					}
 				} else
 					tValeursChamps[iIndiceChamp] = "";
 			}
 
-		} catch (EOFException e) {
-			return null;
 		} catch (IOException e) {
 			return null;
 		}

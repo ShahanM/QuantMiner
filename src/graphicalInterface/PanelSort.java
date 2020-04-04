@@ -14,18 +14,20 @@
 package src.graphicalInterface;
 
 
-import javax.swing.*;
-import javax.swing.tree.*;
-import javax.swing.table.*;
+import src.apriori.AssociationRule;
+import src.apriori.Item;
+import src.apriori.ItemQualitative;
+import src.apriori.ItemQuantitative;
+import src.database.DataColumn;
+import src.database.DatabaseAdmin;
+import src.graphicalInterface.TreeTable.AttributsBDModel;
+import src.graphicalInterface.TreeTable.JTreeTable;
+import src.solver.ResolutionContext;
+import src.tools.SortingTools;
 
-import src.apriori.*;
-import src.database.*;
-import src.graphicalInterface.TreeTable.*;
-import src.solver.*;
-import src.tools.*;
-
-import java.awt.*;
-import java.util.*;
+import javax.swing.tree.DefaultMutableTreeNode;
+import java.util.Hashtable;
+import java.util.List;
 
 public class PanelSort extends javax.swing.JPanel { //step 5 the second/middle panel
     
@@ -37,7 +39,7 @@ public class PanelSort extends javax.swing.JPanel { //step 5 the second/middle p
     public PanelSort(PanelResults panneauResultats, ResolutionContext contexteResolution) {
         initComponents();
         
-        jTextFieldInteret.setText( m_contexteResolution.EcrirePourcentage(0.75f, 3, false) );
+        jTextFieldInteret.setText( ResolutionContext.EcrirePourcentage(0.75f, 3, false) );
         jTextFieldInteret.setEnabled(false);
         jCheckBoxInteret.setSelected(false);
         
@@ -164,8 +166,6 @@ public class PanelSort extends javax.swing.JPanel { //step 5 the second/middle p
             jTextFieldInteret.setEnabled(false);
         }
     }//GEN-LAST:event_jCheckBoxInteretActionPerformed
-
-    
     
     private void jButtonFiltreSelectionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonFiltreSelectionActionPerformed
         AssociationRule regleCourante = null;
@@ -173,7 +173,6 @@ public class PanelSort extends javax.swing.JPanel { //step 5 the second/middle p
         int iTypePriseEnCompte = 0;
         int iNombreColonnes = 0;
         int iIndiceColonne = 0;
-        int iTypeNoeud = 0;
         String sNomColonne = null;
         DataColumn colonneDonnees = null;
         DatabaseAdmin gestionnaireBD = null;        
@@ -181,7 +180,7 @@ public class PanelSort extends javax.swing.JPanel { //step 5 the second/middle p
         int iNombreItems = 0;
         int iIndiceItem = 0;
         Item item = null;
-        Item [] tItemsRegle = null;
+        List<Item> tItemsRegle;
         ItemQualitative itemQual = null;
         ItemQuantitative itemQuant = null;
         String sNomItem = null;
@@ -210,11 +209,12 @@ public class PanelSort extends javax.swing.JPanel { //step 5 the second/middle p
             colonneDonnees = gestionnaireBD.ObtenirColonneBDPriseEnCompte(iIndiceColonne);
             if (colonneDonnees != null) {
                 
-                sNomColonne = new String( colonneDonnees.m_sNomColonne );
+                sNomColonne = colonneDonnees.m_sNomColonne;
                 //if the position of this column is not no where
                 if (m_contexteResolution.ObtenirTypePrisEnCompteAttribut(sNomColonne) != ResolutionContext.PRISE_EN_COMPTE_ITEM_NULLE_PART) {
 
-                    // Attributs qualitatifs :
+                    // Attributs qualitat
+                    // ifs :
                     if (colonneDonnees.m_iTypeValeurs == DatabaseAdmin.TYPE_VALEURS_COLONNE_ITEM) {
 
                         // Items :
@@ -225,7 +225,6 @@ public class PanelSort extends javax.swing.JPanel { //step 5 the second/middle p
                                     m_contexteResolution.DefinirTypePrisEnCompteItem_Filtrage(sNomColonne, tItems[iIndiceItem], ResolutionContext.PRISE_EN_COMPTE_ITEM_2_COTES);
                                     m_contexteResolution.DefinirPresenceObligatoireItem_Filtrage(sNomColonne, tItems[iIndiceItem], false);
                                 }
-                        
                     }                
                     // Attributs quantitatifs :
                     else if (colonneDonnees.m_iTypeValeurs == DatabaseAdmin.TYPE_VALEURS_COLONNE_REEL) {
@@ -236,24 +235,23 @@ public class PanelSort extends javax.swing.JPanel { //step 5 the second/middle p
             }
         }
         
-        
         // On traite les 2 c�t�s de la r�gle approximativemen de la m�me mani�re :
         for (iIndiceCoteRegle=0; iIndiceCoteRegle<2; iIndiceCoteRegle++) {
         
             if (iIndiceCoteRegle==0) {
-                iNombreItems = regleCourante.m_iNombreItemsGauche;
-                tItemsRegle = regleCourante.m_tItemsGauche;
-                iTypePriseEnCompte = m_contexteResolution.PRISE_EN_COMPTE_ITEM_GAUCHE;
+                iNombreItems = regleCourante.getLeftItems().size();
+                tItemsRegle = regleCourante.getLeftItems();
+                iTypePriseEnCompte = ResolutionContext.PRISE_EN_COMPTE_ITEM_GAUCHE;
             }
             else {
-                iNombreItems = regleCourante.m_iNombreItemsDroite;
-                tItemsRegle = regleCourante.m_tItemsDroite;
-                iTypePriseEnCompte = m_contexteResolution.PRISE_EN_COMPTE_ITEM_DROITE;
+                iNombreItems = regleCourante.getRightItems().size();
+                tItemsRegle = regleCourante.getRightItems();
+                iTypePriseEnCompte = ResolutionContext.PRISE_EN_COMPTE_ITEM_DROITE;
             }                    
 
                          
             for (iIndiceItem=0; iIndiceItem<iNombreItems; iIndiceItem++) {
-                item = tItemsRegle[iIndiceItem];
+                item = tItemsRegle.get(iIndiceItem);
                 
                 if (item.m_iTypeItem == Item.ITEM_TYPE_QUALITATIF) {
                     itemQual = (ItemQualitative)item;
@@ -313,7 +311,7 @@ public class PanelSort extends javax.swing.JPanel { //step 5 the second/middle p
             colonneDonnees = gestionnaireBD.ObtenirColonneBDPriseEnCompte(iIndiceColonne);
             if (colonneDonnees != null) {
                 
-                sNomColonne = new String( colonneDonnees.m_sNomColonne );
+                sNomColonne = colonneDonnees.m_sNomColonne;
                 
                 iTypePriseEnCompte = m_contexteResolution.ObtenirTypePrisEnCompteAttribut(sNomColonne);
                 if (iTypePriseEnCompte != ResolutionContext.PRISE_EN_COMPTE_ITEM_NULLE_PART) {
@@ -414,12 +412,11 @@ public class PanelSort extends javax.swing.JPanel { //step 5 the second/middle p
     
     public int ObtenirMethodeTri() {
         switch( jComboBoxMethodeTri.getSelectedIndex() ) {
-            case 0:
-                return METHODE_TRI_CONFIANCE;
             case 1:
                 return METHODE_TRI_SUPPORT;
             case 2:
                 return METHODE_TRI_NOMBRE_ATTRIBUTS;
+            case 0:
             default:
                 return METHODE_TRI_CONFIANCE;
         }
@@ -487,8 +484,7 @@ public class PanelSort extends javax.swing.JPanel { //step 5 the second/middle p
         int iIndiceCoteRegle = 0;
         int iNombreItems = 0;
         int iIndiceItem = 0;
-        Item item = null;
-        Item [] tItemsRegle = null;
+        List<Item> tItemsRegle;
         ItemQualitative itemQual = null;
         ItemQuantitative itemQuant = null;
         AssociationRule regle = null;
@@ -545,7 +541,7 @@ public class PanelSort extends javax.swing.JPanel { //step 5 the second/middle p
             colonneDonnees = gestionnaireBD.ObtenirColonneBDPriseEnCompte(iIndiceColonne);
             if (colonneDonnees.m_sNomColonne != null)
             {
-                sNomColonne = new String( colonneDonnees.m_sNomColonne );
+                sNomColonne = colonneDonnees.m_sNomColonne;
                 
                 // Il n'est pas utile de prendre en consid�ration les attributs qui ne devaient pas appara�tre dans les r�gles :
                 if (m_contexteResolution.ObtenirTypePrisEnCompteAttribut(sNomColonne) != ResolutionContext.PRISE_EN_COMPTE_ITEM_NULLE_PART) {
@@ -586,16 +582,14 @@ public class PanelSort extends javax.swing.JPanel { //step 5 the second/middle p
             for (iIndiceCoteRegle=0; iIndiceCoteRegle<2; iIndiceCoteRegle++) {
         
                 if (iIndiceCoteRegle==0) {
-                    iNombreItems = regle.m_iNombreItemsGauche;
-                    tItemsRegle = regle.m_tItemsGauche;
+                    tItemsRegle = regle.getLeftItems();
                 }
                 else {
-                    iNombreItems = regle.m_iNombreItemsDroite;
-                    tItemsRegle = regle.m_tItemsDroite;
+                    tItemsRegle = regle.getRightItems();
                 }                    
             
-                for (iIndiceItem=0; iIndiceItem<iNombreItems; iIndiceItem++) {
-                    item = tItemsRegle[iIndiceItem];
+                for (Item item : tItemsRegle) {
+                    // item = tItemsRegle.get(iIndiceItem);
                     if (item.m_iTypeItem == Item.ITEM_TYPE_QUALITATIF) {
                         itemQual = (ItemQualitative)item;
                         
@@ -656,15 +650,15 @@ public class PanelSort extends javax.swing.JPanel { //step 5 the second/middle p
                     if (  ( (iPasseRemplissage==0) && (colonneDonnees.m_iTypeValeurs == DatabaseAdmin.TYPE_VALEURS_COLONNE_ITEM) )
                         ||( (iPasseRemplissage==1) && (colonneDonnees.m_iTypeValeurs == DatabaseAdmin.TYPE_VALEURS_COLONNE_REEL) ) ) {
 
-                        sNomColonne = new String( colonneDonnees.m_sNomColonne );
+                        sNomColonne = colonneDonnees.m_sNomColonne;
                         if (m_contexteResolution.ObtenirTypePrisEnCompteAttribut(sNomColonne) != ResolutionContext.PRISE_EN_COMPTE_ITEM_NULLE_PART) {
 
                             // Construction de la phrase de description :
                             nombreOccurrencesAttribut = (NombreOccurrences)tableOccurrencesAttributs.get(sNomColonne);
                             if (nombreOccurrencesAttribut != null) {
-                                sDescriptionElement = " " + String.valueOf(nombreOccurrencesAttribut.m_iOccurrencesGauche) + "  left,  "
-                                                          + String.valueOf(nombreOccurrencesAttribut.m_iOccurrencesDroite) + "  right,  "
-                                                          + String.valueOf(nombreOccurrencesAttribut.m_iOccurrencesGauche+nombreOccurrencesAttribut.m_iOccurrencesDroite) + "  in total.";
+                                sDescriptionElement = " " + nombreOccurrencesAttribut.m_iOccurrencesGauche + "  left,  "
+                                                          + nombreOccurrencesAttribut.m_iOccurrencesDroite + "  right,  "
+                                                          + (nombreOccurrencesAttribut.m_iOccurrencesGauche + nombreOccurrencesAttribut.m_iOccurrencesDroite) + "  in total.";
                             }
                             else
                                 sDescriptionElement = "Error of comptabilisation !";

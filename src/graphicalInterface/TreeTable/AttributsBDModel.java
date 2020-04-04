@@ -223,7 +223,7 @@ public class AttributsBDModel extends AbstractTreeTableModel {
     
     public void ModifierNomColonne(int iIndiceColonne, String sNouveauNom) {
         if (iIndiceColonne < tNomsDefaut.length)
-            tNoms[iIndiceColonne] = new String(sNouveauNom);
+            tNoms[iIndiceColonne] = sNouveauNom;
     }
     
 
@@ -395,17 +395,15 @@ public class AttributsBDModel extends AbstractTreeTableModel {
         
         switch(column) {
             case 0:
-                return null;
             case 1:
+            case 3:
                 return null;
-	    case 2:
+            case 2:
                 if (!attributDescription.EstItem())
                     return m_rendererComboAttribut;
                 else 
                     return null;
-            case 3:
-                return null;
-	}
+        }
         
         return null;
     }

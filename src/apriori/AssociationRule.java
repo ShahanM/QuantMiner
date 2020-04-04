@@ -13,20 +13,18 @@
  */
 package src.apriori;
 
+import src.database.DatabaseAdmin;
+import src.solver.ResolutionContext;
+
 import java.util.*;
-
-import src.database.*;
-import src.solver.*;
-
-
 
 
 public class AssociationRule {
     
-    public Item [] m_tItemsGauche = null;  //left item
-    public Item [] m_tItemsDroite = null;  //right item
-    public int m_iNombreItemsGauche = 0;   //number of left item
-    public int m_iNombreItemsDroite = 0;   //number of right items
+    private List<Item> m_tItemsGauche;  //left item
+    private List<Item> m_tItemsDroite;  //right item
+    private int m_iNombreItemsGauche = 0;   //number of left item
+    private int m_iNombreItemsDroite = 0;   //number of right items
     
     public int m_iOccurrences = 0; // number de fois o� la r�gle est v�rifi�e (support non relative) 
     public float m_fSupport = 0.0f;
@@ -41,10 +39,10 @@ public class AssociationRule {
     public int m_iNombreDisjonctionsGauche = 0;
     public int m_iNombreDisjonctionsDroite = 0;
     public int m_iNombreDisjonctionsGaucheValides = 0;
-    public int m_iNombreDisjonctionsDroiteValides = 0;    
-    
-    
-    
+    public int m_iNombreDisjonctionsDroiteValides = 0;
+
+    public float m_fQualite = 0.0f;
+
     public AssociationRule(int iNombreItemsGauche, int iNombreItemsDroite, int iNombreDisjonctionsGauche, int iNombreDisjonctionsDroite) {
         
         if ( (iNombreItemsGauche <= 0) || (iNombreItemsDroite <= 0) ) {
@@ -58,10 +56,8 @@ public class AssociationRule {
         else {
             m_iNombreItemsGauche = iNombreItemsGauche;
             m_iNombreItemsDroite = iNombreItemsDroite;
-            m_tItemsGauche = new Item [m_iNombreItemsGauche];
-            m_tItemsDroite = new Item [m_iNombreItemsDroite];
-            Arrays.fill(m_tItemsGauche, null);
-            Arrays.fill(m_tItemsDroite, null);
+            m_tItemsGauche = new ArrayList<>();
+            m_tItemsDroite = new ArrayList<>();
             m_iNombreDisjonctionsGauche = iNombreDisjonctionsGauche;
             m_iNombreDisjonctionsDroite = iNombreDisjonctionsDroite;
         }
@@ -78,49 +74,30 @@ public class AssociationRule {
         m_iOccurrences_NonGauche_Droite = 0;
         m_iOccurrences_NonGauche_NonDroite = 0;
     }
-    
 
-    
     // Construct de copie :
     public AssociationRule(AssociationRule regle) {
         this.CopierRegleAssociation(regle);
     }
-    
-    
-    
+
     // Construct de copie :
     public void CopierRegleAssociation(AssociationRule regle) {
-        int iIndiceItem = 0;
-        Item item = null;
-                
         if (regle != null) {
             
             this.m_iNombreItemsGauche = regle.m_iNombreItemsGauche;
             this.m_iNombreItemsDroite = regle.m_iNombreItemsDroite;
             
-            this.m_tItemsGauche = new Item [m_iNombreItemsGauche];
-            this.m_tItemsDroite = new Item [m_iNombreItemsDroite];
+            this.m_tItemsGauche = new ArrayList<>();
+            this.m_tItemsDroite = new ArrayList<>();
             
             // Copie des items de la partie gauche :
-            for (iIndiceItem = 0; iIndiceItem < m_iNombreItemsGauche; iIndiceItem++) {
-                item = regle.m_tItemsGauche[iIndiceItem];
-                if (item.m_iTypeItem == Item.ITEM_TYPE_QUANTITATIF)
-                    this.m_tItemsGauche[iIndiceItem] = new ItemQuantitative((ItemQuantitative)item);
-                else
-                    this.m_tItemsGauche[iIndiceItem] = item;
-            } 
-                  
-            for (iIndiceItem=0; iIndiceItem<m_iNombreItemsDroite; iIndiceItem++) {
-                item = regle.m_tItemsDroite[iIndiceItem];
-                if (item.m_iTypeItem == Item.ITEM_TYPE_QUANTITATIF)
-                    this.m_tItemsDroite[iIndiceItem] = new ItemQuantitative((ItemQuantitative)item);
-                else
-                    this.m_tItemsDroite[iIndiceItem] = item;
-            }
+            this.m_tItemsGauche.addAll(regle.getLeftItems());
+            this.m_tItemsDroite.addAll(regle.getRightItems());
            
             this.m_iOccurrences = regle.m_iOccurrences;
             this.m_fSupport = regle.m_fSupport;
             this.m_fConfiance = regle.m_fConfiance;
+            this.m_fQualite = regle.m_fQualite;
             this.m_iOccurrencesGauche = regle.m_iOccurrencesGauche;
             this.m_iOccurrencesDroite = regle.m_iOccurrencesDroite;
             this.m_iOccurrences_Gauche_NonDroite = regle.m_iOccurrences_Gauche_NonDroite;
@@ -139,6 +116,7 @@ public class AssociationRule {
             this.m_tItemsDroite = null;
             this.m_iOccurrences = 0;
             this.m_fSupport = 0.0f;
+            this.m_fQualite = 0.0f;
             this.m_fConfiance = 0.0f;
             this.m_iOccurrencesGauche = 0;
             this.m_iOccurrencesDroite = 0;
@@ -151,22 +129,26 @@ public class AssociationRule {
             this.m_iNombreDisjonctionsDroiteValides = 0;
         }
     }
- 
-    
-    
+
+    public List<Item> getLeftItems(){
+        return this.m_tItemsGauche;
+    }
+
+    public List<Item> getRightItems(){
+        return this.m_tItemsDroite;
+    }
+
     // Classe permettant la comparaison des r�gles selon la valeur de confiance :
     public static abstract class ComparateurRegles implements Comparator {
         
-        boolean m_bTriDecroissant = false;
-        
-        
+        boolean m_bTriDecroissant;
+
         public ComparateurRegles(boolean bTriDecroissant) {
             m_bTriDecroissant = bTriDecroissant;
         }
         
-        
         public int compare(Object o1, Object o2) {
-            int iResultatComparaison = 0;
+            int iResultatComparaison;
             
             iResultatComparaison = CompareRegles((AssociationRule)o1, (AssociationRule)o2);
                         
@@ -175,17 +157,22 @@ public class AssociationRule {
             
             return iResultatComparaison;
         }        
-        
-        
+
         public abstract int CompareRegles(AssociationRule regle1, AssociationRule regle2);
-        
-        
+
         public boolean equals(Object obj) {
+
+            if (obj == null){
+                return false;
+            }
+
+            if (getClass() != obj.getClass()){
+                return false;
+            }
+
             return (compare(this, obj) == 0);
         }
-    }  
-    
-    
+    }
     
     /**comparing RULES on the value of Confidence
      */
@@ -201,18 +188,11 @@ public class AssociationRule {
             else if (regle1.m_fConfiance < regle2.m_fConfiance)
                 return -1;
             else {
-                if (regle1.m_iOccurrences > regle2.m_iOccurrences)
-                    return 1;
-                else if (regle1.m_iOccurrences < regle2.m_iOccurrences)
-                    return -1;
-                else
-                    return 0;
+                return Integer.compare(regle1.m_iOccurrences, regle2.m_iOccurrences);
             }
         }
     }    
-    
-    
-    
+
     /**comparing RULES on the value of support
      */
     public static class ComparateurSupport extends ComparateurRegles {
@@ -227,17 +207,10 @@ public class AssociationRule {
             else if (regle1.m_iOccurrences < regle2.m_iOccurrences)
                 return -1;
             else {
-                if (regle1.m_fConfiance > regle2.m_fConfiance)
-                    return 1;
-                else if (regle1.m_fConfiance < regle2.m_fConfiance)
-                    return -1;                
-                else
-                    return 0;
+                return Float.compare(regle1.m_fConfiance, regle2.m_fConfiance);
             }
         }        
-    }  
-    
-    
+    }
     
     /**Class for comparing RULES depending on the number of attributes it contains
      */
@@ -248,8 +221,8 @@ public class AssociationRule {
         }
         
         public int CompareRegles(AssociationRule regle1, AssociationRule regle2) {
-            int iNombreItemsRegle1 = 0;
-            int iNombreItemsRegle2 = 0;
+            int iNombreItemsRegle1;
+            int iNombreItemsRegle2;
             
             iNombreItemsRegle1 = regle1.m_iNombreItemsGauche + regle1.m_iNombreItemsDroite;
             iNombreItemsRegle2 = regle2.m_iNombreItemsGauche + regle2.m_iNombreItemsDroite;
@@ -269,186 +242,150 @@ public class AssociationRule {
                     else if (regle1.m_fConfiance < regle2.m_fConfiance)
                         return -1;
                     else {
-                        if (regle1.m_iOccurrences > regle2.m_iOccurrences)
-                            return 1;
-                        else if (regle1.m_iOccurrences < regle2.m_iOccurrences)
-                            return -1;
-                        else
-                            return 0;
+                        return Integer.compare(regle1.m_iOccurrences, regle2.m_iOccurrences);
                     }
                 }
             }
         }        
     }  
-    
-    
-    
+
     // G�n�rateurs de comparateurs :
     public static Comparator ObtenirComparateurConfiance(boolean bTriDecroissant) { return new ComparateurConfiance(bTriDecroissant); }
     public static Comparator ObtenirComparateurSupport(boolean bTriDecroissant) { return new ComparateurSupport(bTriDecroissant); }
     public static Comparator ObtenirComparateurNombreAttributs(boolean bTriDecroissant) { return new ComparateurNombreAttributs(bTriDecroissant); }
-        
     
-    /**Assign Left Item 
-     * @param item
-     * @param iPosition
+    /**Assign Left Item
+     * @param item - ItemQuantitative or ItemQualitative
      */
-    public void AssignerItemGauche(Item item, int iPosition) {
-        if ( (iPosition < m_iNombreItemsGauche) && (item != null) )
-            m_tItemsGauche[iPosition] = item;
-    }
-    
-    
-    /**
-     * Assign Right Item
-     * @param item
-     * @param iPosition
-     */
-    public void AssignerItemDroite(Item item, int iPosition) {
-        if ( (iPosition < m_iNombreItemsDroite) && (item != null) )
-            m_tItemsDroite[iPosition] = item;
+    public boolean AssignerItemGauche(Item item) {
+        if (item != null){
+            return m_tItemsGauche.add(item);
+        }
+        return false;
     }
 
-    
-    
+    public boolean removeLeftItem(Item item){
+        return m_tItemsGauche.remove(item);
+    }
+
+    /**
+     * Assign Right Item
+     * @param item - ItemQuantitative or ItemQualitative
+     */
+    public boolean AssignerItemDroite(Item item) {
+        if (item != null){
+            return m_tItemsDroite.add(item);
+        }
+        return false;
+    }
+
     public void AssignerNombreOccurrences(int iOccurrences) {
         m_iOccurrences = iOccurrences;
     }
 
-    
-    
     public void AssignerSupport(float fSupport) {
         m_fSupport = fSupport;
     }
-    
-    
-    
+
     public void AssignerConfiance(float fConfiance) {
         m_fConfiance = fConfiance;
     }
-    
-    
+
     /**
      * Get left item
-     * @param iPosition
+     * @param iPosition - index of Item in AssociationRule left
      * @return Item
      */
+    @Deprecated
     public Item ObtenirItemGauche(int iPosition) {
-        if (iPosition < m_iNombreItemsGauche)
-            return m_tItemsGauche[iPosition];
-        else
-            return null;
+        return m_tItemsGauche.get(iPosition);
     }
-    
-    
+
     /**
      * Get right item
-     * @param iPosition
+     * @param iPosition - index of Item in AssociationRule right
      * @return item
      */
     public Item ObtenirItemDroite(int iPosition) {
-        if (iPosition < m_iNombreItemsDroite)
-            return m_tItemsDroite[iPosition];
-        else
-            return null;
+        return m_tItemsDroite.get(iPosition);
     }
- 
-    
+
     /**Compute the number of items of a specific type on the left
-     * @param iTypeItem
+     * @param iTypeItem - ItemQualitative or ItemQuantitative
      * @return int
      */
     public int CompterItemsGaucheSelonType(int iTypeItem) {
-        int iPosition = 0;
         int iCompteur = 0;
-        
-        iCompteur = 0;
-        for (iPosition = 0; iPosition < m_iNombreItemsGauche; iPosition++)
-            if (m_tItemsGauche[iPosition].m_iTypeItem == iTypeItem)
+
+        for (Item item : m_tItemsGauche){
+            if (item.m_iTypeItem == iTypeItem){
                 iCompteur++;
-        
+            }
+        }
+
         return iCompteur;
     }
-    
     
     /**Compute the number of items of a specific type on the right
      * 
-     * @param iTypeItem
+     * @param iTypeItem - ItemQualitative or ItemQuantitative
      * @return int
      */
     public int CompterItemsDroiteSelonType(int iTypeItem) {
-        int iPosition = 0;
         int iCompteur = 0;
-        
-        iCompteur = 0;
-        for (iPosition=0; iPosition<m_iNombreItemsDroite; iPosition++)
-            if (m_tItemsDroite[iPosition].m_iTypeItem == iTypeItem)
+
+        for (Item item : m_tItemsDroite) {
+            if (item.m_iTypeItem == iTypeItem) {
                 iCompteur++;
-        
+            }
+        }
         return iCompteur;
     }
     
-    
-    
     public void EvaluerSiQualitative(ResolutionContext contexteResolution) {
-        ItemQualitative [] itemsGauche = null;
-        ItemQualitative [] itemsTotaux = null;
-        int iIndiceItem = 0;
-        Item item = null;
-        int iIndiceAjoutItemGauche = 0;
-        int iIndiceAjoutItemTotaux = 0;
-        ItemSet itemSetGauche = null;
-        ItemSet itemSetTotal = null;
-        AprioriQuantitative apriori = null;
+        List<ItemQualitative> itemsGauche = new ArrayList<>();
+        List<ItemQualitative> itemsTotaux = new ArrayList<>();
+        ItemSet itemSetGauche;
+        ItemSet itemSetTotal;
         
         if (contexteResolution == null)
             return;
-        
-        apriori = contexteResolution.m_aprioriCourant;
+
+        AprioriQuantitative apriori = contexteResolution.m_aprioriCourant;
         if (apriori == null)
             return;
-        
-        itemsGauche = new ItemQualitative[ m_iNombreItemsGauche ];
-        itemsTotaux = new ItemQualitative[ m_iNombreItemsGauche+m_iNombreItemsDroite ];
-        iIndiceAjoutItemGauche = 0;
-        iIndiceAjoutItemTotaux = 0;
-        
+
         // On r�pertorie tous les items qualitatifs de gauche :
-        for (iIndiceItem=0; iIndiceItem<m_iNombreItemsGauche; iIndiceItem++) {
-            item = m_tItemsGauche[iIndiceItem];
-            if (item.m_iTypeItem == Item.ITEM_TYPE_QUALITATIF) {
-                itemsGauche[iIndiceAjoutItemGauche] = (ItemQualitative)item;
-                itemsTotaux[iIndiceAjoutItemTotaux] = (ItemQualitative)item;
-                iIndiceAjoutItemGauche++;
-                iIndiceAjoutItemTotaux++;
-            }
-            else
+        for (Item item : m_tItemsGauche){
+            if (item.m_iTypeItem == Item.ITEM_TYPE_QUALITATIF){
+                itemsGauche.add((ItemQualitative) item);
+                itemsTotaux.add((ItemQualitative) item);
+            } else {
                 return;
+            }
         }
                 
         // On r�pertorie tous les items qualitatifs de droite :
-        for (iIndiceItem=0; iIndiceItem<m_iNombreItemsDroite; iIndiceItem++) {
-            item = m_tItemsDroite[iIndiceItem];
-            if (item.m_iTypeItem == Item.ITEM_TYPE_QUALITATIF) {
-                itemsTotaux[iIndiceAjoutItemTotaux] = (ItemQualitative)item;
-                iIndiceAjoutItemTotaux++;
-            }
-            else
+        for (Item item : m_tItemsDroite){
+            if (item.m_iTypeItem == Item.ITEM_TYPE_QUALITATIF){
+                itemsTotaux.add((ItemQualitative) item);
+            } else {
                 return;
-        }        
-        
+            }
+        }
 
-        if (  (iIndiceAjoutItemGauche != m_iNombreItemsGauche)
-            ||(iIndiceAjoutItemTotaux != (m_iNombreItemsGauche+m_iNombreItemsDroite))  )
+        if ( (itemsGauche.size() != m_tItemsGauche.size())
+                || (itemsTotaux.size() != (m_tItemsGauche.size() + m_tItemsDroite.size()))){
             return;
-        
+        }
+
         // Evaluation des valeurs statistiques de la r�gle :
         itemSetTotal = apriori.RechercherFrequent(itemsTotaux);
         if (itemSetTotal != null) {
-            
             // Evaluation du support de la r�gle :
             this.m_iOccurrences = itemSetTotal.m_iSupport;
-            this.m_fSupport = ((float)this.m_iOccurrences) / ((float)contexteResolution.m_gestionnaireBD.ObtenirNombreLignes());
+            this.m_fSupport = ((float)this.m_iOccurrences)
+                    / ((float)contexteResolution.m_gestionnaireBD.ObtenirNombreLignes());
     
             // Evaluation de la confiance de la r�gle :
             itemSetGauche = apriori.RechercherFrequent(itemsGauche);
@@ -458,88 +395,97 @@ public class AssociationRule {
     }
     
 	public String leftToString() {
-		 String sRegle = null;
+		 StringBuilder sRegle =null;
 		 int iIndiceItem = 0;
 	     Item item = null;
-	     boolean bItemsQualitatifsPresents = false;        
-	     boolean bPremierItemInscrit = false;
+	     boolean bItemsQualitatifsPresents = false;
 	     int iIndiceDisjonction = 0;
 	     int iNombreDisjonctions = 0;
 	     int iNombreItemsQuantitatifs = 0;
 	     int iNombreItems = 0;
-	     Item tItemsRegle [] = null; 
-	     sRegle = new String("");
+	     sRegle = new StringBuilder();
 		 
 	     iNombreItems = m_iNombreItemsGauche;  //number of items on left
-         tItemsRegle = m_tItemsGauche;         //the left items
+         List<Item> tItemsRegle = m_tItemsGauche;         //the left items
          iNombreItemsQuantitatifs = CompterItemsGaucheSelonType(Item.ITEM_TYPE_QUANTITATIF); 
          iNombreDisjonctions = m_iNombreDisjonctionsGaucheValides;
          
         //Firstly, write the qualitative items. if more than one exist, concatenate with AND
-         bPremierItemInscrit = false;
-         for (iIndiceItem = 0; iIndiceItem < iNombreItems; iIndiceItem++) {
-             item = tItemsRegle[iIndiceItem];
-             if (item.m_iTypeItem == Item.ITEM_TYPE_QUALITATIF) {
-                 if (bPremierItemInscrit)
-                     sRegle += "  AND  "; // "  ET  "
-                 sRegle += ((ItemQualitative)item).toString();
-                 bPremierItemInscrit = true;
-             }
-         }    
-         bItemsQualitatifsPresents = bPremierItemInscrit;   //if has qualitative item
+        boolean bPremierItemInscrit = false;
+        for (iIndiceItem = 0; iIndiceItem < iNombreItems; iIndiceItem++) {
+            item = tItemsRegle.get(iIndiceItem);
+            if (item.m_iTypeItem == Item.ITEM_TYPE_QUALITATIF) {
+                if (bPremierItemInscrit)
+                    sRegle.append("  AND  "); // "  ET  "
+                sRegle.append(((ItemQualitative) item).toString());
+                bPremierItemInscrit = true;
+            }
+        }
+
+        bItemsQualitatifsPresents = bPremierItemInscrit;   //if has qualitative item
      
          //Next, display quantitative items:
          if (iNombreItemsQuantitatifs > 0) {
              if (bItemsQualitatifsPresents) {
-                 sRegle += "  AND  ";
+                 sRegle.append("  AND  ");
                  if (iNombreDisjonctions > 1)
-                     sRegle += "( ";   
+                     sRegle.append("( ");
              }
 
              for (iIndiceDisjonction = 0; iIndiceDisjonction < iNombreDisjonctions; iIndiceDisjonction++) {
 
                  if (iIndiceDisjonction > 0)
-                     sRegle += "  OR  "; //OU
+                     sRegle.append("  OR  "); //OU
 
                  if ( (iNombreItemsQuantitatifs > 1) && (iNombreDisjonctions > 1) )
-                     sRegle += "( ";
+                     sRegle.append("( ");
 
                  bPremierItemInscrit = false;
                  for (iIndiceItem = 0; iIndiceItem < iNombreItems; iIndiceItem++) {
-                     item = tItemsRegle[iIndiceItem];
+                     item = tItemsRegle.get(iIndiceItem);
                      if (item.m_iTypeItem == Item.ITEM_TYPE_QUANTITATIF) {
                          if (bPremierItemInscrit)
-                             sRegle += "  AND  "; //ET
-                         sRegle += ((ItemQuantitative)item).toString(iIndiceDisjonction);
+                             sRegle.append("  AND  "); //ET
+                         sRegle.append(((ItemQuantitative) item).toString(iIndiceDisjonction));
                          bPremierItemInscrit = true;
                      }
                  }               
 
                  if ( (iNombreItemsQuantitatifs > 1) && (iNombreDisjonctions > 1) )
-                     sRegle += " )";            
+                     sRegle.append(" )");
              }
 
              if ( (bItemsQualitatifsPresents) && (iNombreDisjonctions > 1) )
-                     sRegle += " ) ";   
+                     sRegle.append(" ) ");
          }
          
-         return sRegle;
+         return sRegle.toString();
 	}
+
+//	private StringBuilder collectLeftItems(StringBuilder sb, Item[] ruleItems, int itemType){
+//        for (Item item : ruleItems) {
+//            if (bPremierItemInscrit)
+//                sb.append("  AND  "); // "  ET  "
+//            sb.append(item.toString());
+//            bPremierItemInscrit = true;
+//        }
+//
+//        return sb;
+//    }
     
 	public Vector<Qualitative> leftQualiToArray() {
 		// TODO Auto-generated method stub
 		 int iIndiceItem = 0;
 	     Item item = null;
 	     int iNombreItems = 0;                         //number of items on the left
-	     Item tItemsRegle [] = null;                   //the left items
 	     Vector<Qualitative> array = new Vector<Qualitative>();
 		 
 	    iNombreItems = m_iNombreItemsGauche;  //number of items on left
-        tItemsRegle = m_tItemsGauche;         //the left items
+        List<Item> tItemsRegle = m_tItemsGauche;         //the left items
         
        //Firstly, write the qualitative items. if more than one exist, concatenate with AND
         for (iIndiceItem = 0; iIndiceItem < iNombreItems; iIndiceItem++) {
-            item = tItemsRegle[iIndiceItem];
+            item = tItemsRegle.get(iIndiceItem);
             if (item.m_iTypeItem == Item.ITEM_TYPE_QUALITATIF) {
             	array.add(((ItemQualitative)item).getAttributeNameValue());
             }
@@ -548,17 +494,15 @@ public class AssociationRule {
 	}
 	
 	public Vector<Vector<Quantitative>> leftQuantiToArray() {
-		// TODO Auto-generated method stub
-		 int iIndiceItem = 0;
-	     Item item = null;
-	     int iIndiceDisjonction = 0;                   //which or
-	     int iNombreDisjonctions = 0;                  //number of ORs
-	     int iNombreItemsQuantitatifs = 0;             //number of Quantitatives
-	     int iNombreItems = 0;                         //number of items on the left
-	     Item tItemsRegle [] = null;                   //the left items
+        int iIndiceItem = 0;
+	    Item item = null;
+	    int iIndiceDisjonction = 0;                   //which or
+	    int iNombreDisjonctions = 0;                  //number of ORs
+	    int iNombreItemsQuantitatifs = 0;             //number of Quantitatives
+        int iNombreItems = 0;                         //number of items on the left
 		 
 	    iNombreItems = m_iNombreItemsGauche;  //number of items on left
-        tItemsRegle = m_tItemsGauche;         //the left items
+        List<Item> tItemsRegle = m_tItemsGauche;         //the left items
         iNombreItemsQuantitatifs = CompterItemsGaucheSelonType(Item.ITEM_TYPE_QUANTITATIF); 
         iNombreDisjonctions = m_iNombreDisjonctionsGaucheValides;
 
@@ -571,46 +515,41 @@ public class AssociationRule {
                 
         	    Vector<Quantitative> temp = new Vector<Quantitative>();
                 for (iIndiceItem = 0; iIndiceItem < iNombreItems; iIndiceItem++) {
-                    item = tItemsRegle[iIndiceItem];
+                    item = tItemsRegle.get(iIndiceItem);
                     if (item.m_iTypeItem == Item.ITEM_TYPE_QUANTITATIF) {
                     	temp.add(((ItemQuantitative)item).getAttributeNameBoundary(iIndiceDisjonction));
                     }
-                }    
-                
+                }
                 array.add(temp);
-
             }
-
         return array;
 	}
 	
 	public String rightToString() {
 		// TODO Auto-generated method stub
-		 String sRegle = null;
+		 StringBuilder sRegle =null;
 		 int iIndiceItem = 0;
 	     Item item = null;
-	     boolean bItemsQualitatifsPresents = false;        
-	     boolean bPremierItemInscrit = false;
+	     boolean bItemsQualitatifsPresents = false;
 	     int iIndiceDisjonction = 0;
 	     int iNombreDisjonctions = 0;
 	     int iNombreItemsQuantitatifs = 0;
 	     int iNombreItems = 0;
-	     Item tItemsRegle [] = null; 
-	     sRegle = new String("");
+	     sRegle=new StringBuilder();
 		 
 	     iNombreItems = m_iNombreItemsDroite;
-         tItemsRegle = m_tItemsDroite;
+         List<Item> tItemsRegle = m_tItemsDroite;
          iNombreItemsQuantitatifs = CompterItemsDroiteSelonType(Item.ITEM_TYPE_QUANTITATIF);
          iNombreDisjonctions = m_iNombreDisjonctionsDroiteValides;
         
        //Firstly, write the qualitative items. if more than one exist, concatenate with AND
-        bPremierItemInscrit = false;
+        boolean bPremierItemInscrit = false;
         for (iIndiceItem = 0; iIndiceItem < iNombreItems; iIndiceItem++) {
-            item = tItemsRegle[iIndiceItem];
+            item = tItemsRegle.get(iIndiceItem);
             if (item.m_iTypeItem == Item.ITEM_TYPE_QUALITATIF) {
                 if (bPremierItemInscrit)
-                    sRegle += "  AND  "; // "  ET  "
-                sRegle += ((ItemQualitative)item).toString();
+                    sRegle.append("  AND  "); // "  ET  "
+                sRegle.append(((ItemQualitative) item).toString());
                 bPremierItemInscrit = true;
             }
         }    
@@ -619,39 +558,38 @@ public class AssociationRule {
         //Next, display quantitative items:
         if (iNombreItemsQuantitatifs > 0) {
             if (bItemsQualitatifsPresents) {
-                sRegle += "  AND  ";
+                sRegle.append("  AND  ");
                 if (iNombreDisjonctions > 1)
-                    sRegle += "( ";   
+                    sRegle.append("( ");
             }
 
             for (iIndiceDisjonction = 0; iIndiceDisjonction < iNombreDisjonctions; iIndiceDisjonction++) {
 
                 if (iIndiceDisjonction > 0)
-                    sRegle += "  OR  "; //OU
+                    sRegle.append("  OR  "); //OU
 
                 if ( (iNombreItemsQuantitatifs > 1) && (iNombreDisjonctions > 1) )
-                    sRegle += "( ";
+                    sRegle.append("( ");
 
                 bPremierItemInscrit = false;
                 for (iIndiceItem = 0; iIndiceItem < iNombreItems; iIndiceItem++) {
-                    item = tItemsRegle[iIndiceItem];
+                    item = tItemsRegle.get(iIndiceItem);
                     if (item.m_iTypeItem == Item.ITEM_TYPE_QUANTITATIF) {
                         if (bPremierItemInscrit)
-                            sRegle += "  AND  "; //ET
-                        sRegle += ((ItemQuantitative)item).toString(iIndiceDisjonction);
+                            sRegle.append("  AND  "); //ET
+                        sRegle.append(((ItemQuantitative) item).toString(iIndiceDisjonction));
                         bPremierItemInscrit = true;
                     }
                 }               
 
                 if ( (iNombreItemsQuantitatifs > 1) && (iNombreDisjonctions > 1) )
-                    sRegle += " )";            
+                    sRegle.append(" )");
             }
 
             if ( (bItemsQualitatifsPresents) && (iNombreDisjonctions > 1) )
-                    sRegle += " ) ";   
+                    sRegle.append(" ) ");
         }
-        
-        return sRegle;
+        return sRegle.toString();
 	}
 
 	
@@ -660,15 +598,14 @@ public class AssociationRule {
 		 int iIndiceItem = 0;
 	     Item item = null;
 	     int iNombreItems = 0;                         //number of items on the left
-	     Item tItemsRegle [] = null;                   //the left items
 	     Vector<Qualitative> array = new Vector<Qualitative>();
 		 
 	     iNombreItems = m_iNombreItemsDroite;
-	     tItemsRegle = m_tItemsDroite;
+	     List<Item> tItemsRegle = m_tItemsDroite;                   //the left items
         
        //Firstly, write the qualitative items. if more than one exist, concatenate with AND
         for (iIndiceItem = 0; iIndiceItem < iNombreItems; iIndiceItem++) {
-            item = tItemsRegle[iIndiceItem];
+            item = tItemsRegle.get(iIndiceItem);
             if (item.m_iTypeItem == Item.ITEM_TYPE_QUALITATIF) {
             	array.add(((ItemQualitative)item).getAttributeNameValue());
             }
@@ -684,10 +621,9 @@ public class AssociationRule {
 	     int iNombreDisjonctions = 0;                  //number of ORs
 	     int iNombreItemsQuantitatifs = 0;             //number of Quantitatives
 	     int iNombreItems = 0;                         //number of items on the left
-	     Item tItemsRegle [] = null;                   //the left items
 		 
 	     iNombreItems = m_iNombreItemsDroite;
-	     tItemsRegle = m_tItemsDroite;
+	     List<Item> tItemsRegle = m_tItemsDroite;
 	     iNombreItemsQuantitatifs = CompterItemsDroiteSelonType(Item.ITEM_TYPE_QUANTITATIF);
          iNombreDisjonctions = m_iNombreDisjonctionsDroiteValides;
 
@@ -700,44 +636,40 @@ public class AssociationRule {
                 
         	    Vector<Quantitative> temp = new Vector<Quantitative>();
                 for (iIndiceItem = 0; iIndiceItem < iNombreItems; iIndiceItem++) {
-                    item = tItemsRegle[iIndiceItem];
+                    item = tItemsRegle.get(iIndiceItem);
                     if (item.m_iTypeItem == Item.ITEM_TYPE_QUANTITATIF) {
                     	temp.add(((ItemQuantitative)item).getAttributeNameBoundary(iIndiceDisjonction));
                     }
-                }    
-                
+                }
                 array.add(temp);
-
             }
-
         return array;
 	}
+
     public String toString() {
         int iIndiceItem = 0;
-        String sRegle = null;
-        Item item = null;
-        boolean bItemsQualitatifsPresents = false;        
+//        Item item = null;
+        boolean bItemsQualitatifsPresents;
         boolean bPremierItemInscrit = false;
         int iIndiceDisjonction = 0;
         int iNombreDisjonctions = 0;
         int iNombreItemsQuantitatifs = 0;
         int iIndiceCoteRegle = 0;
         int iNombreItems = 0;
-        Item tItemsRegle [] = null; 
+        List<Item> tItemsRegle= null;
+
+        StringBuilder sRegle = new StringBuilder();
+
+        sRegle.append("support = ");
+        sRegle.append(m_iOccurrences);
+        sRegle.append(" (");
+        sRegle.append((int) (100.0f * m_fSupport));
+        sRegle.append("%) , confidence = ");
+        sRegle.append(String.valueOf( (int)(100.0f*m_fConfiance)));
+        sRegle.append(" %");
         
-        sRegle = new String("");
-        
-        sRegle += "support = ";
-        sRegle += String.valueOf(m_iOccurrences);
-        sRegle += " (";
-        sRegle += String.valueOf( (int)(100.0f*m_fSupport) );
-        sRegle += "%) , confidence = ";
-        sRegle += String.valueOf( (int)(100.0f*m_fConfiance) );
-        sRegle += " %";
-        
-        sRegle += "  :  ";
-            
-        
+        sRegle.append("  :  ");
+
         // left(qualitative, quantitative) --> right(qualitative, quantitative):
         for (iIndiceCoteRegle = 0; iIndiceCoteRegle < 2; iIndiceCoteRegle++) {
         
@@ -752,68 +684,81 @@ public class AssociationRule {
                 tItemsRegle = m_tItemsDroite;
                 iNombreItemsQuantitatifs = CompterItemsDroiteSelonType(Item.ITEM_TYPE_QUANTITATIF);
                 iNombreDisjonctions = m_iNombreDisjonctionsDroiteValides;
-                sRegle += "   -->   ";
-            }                    
-            
+                sRegle.append("   -->   ");
+            }
             
             //Firstly, write the qualitative items. if more than one exist, concatenate with AND
             bPremierItemInscrit = false;
-            for (iIndiceItem = 0; iIndiceItem < iNombreItems; iIndiceItem++) {
-                item = tItemsRegle[iIndiceItem];
-                if (item.m_iTypeItem == Item.ITEM_TYPE_QUALITATIF) {
-                    if (bPremierItemInscrit)
-                        sRegle += "  AND  "; // "  ET  "
-                    sRegle += ((ItemQualitative)item).toString();
+//            for (iIndiceItem = 0; iIndiceItem < iNombreItems; iIndiceItem++) {
+//                item = tItemsRegle.get(iIndiceItem);
+//                if (item.m_iTypeItem == Item.ITEM_TYPE_QUALITATIF) {
+//                    if (bPremierItemInscrit)
+//                        sRegle.append("  AND  "); // "  ET  "
+//                    sRegle.append(((ItemQualitative)item).toString());
+//                    bPremierItemInscrit = true;
+//                }
+//            }
+            for (Item item : tItemsRegle){
+                if (item.m_iTypeItem == Item.ITEM_TYPE_QUALITATIF){
+                    if (bPremierItemInscrit){
+                        sRegle.append(" AND ");
+                    }
+                    sRegle.append(((ItemQualitative)item).toString());
                     bPremierItemInscrit = true;
                 }
-            }    
+            }
             bItemsQualitatifsPresents = bPremierItemInscrit;   //if has qualitative item
         
             //Next, display quantitative items:
             if (iNombreItemsQuantitatifs > 0) {
                 if (bItemsQualitatifsPresents) {
-                    sRegle += "  AND  ";
+                    sRegle.append("  AND  ");
                     if (iNombreDisjonctions > 1)
-                        sRegle += "( ";   
+                        sRegle.append("( ");
                 }
 
                 for (iIndiceDisjonction = 0; iIndiceDisjonction < iNombreDisjonctions; iIndiceDisjonction++) {
 
                     if (iIndiceDisjonction > 0)
-                        sRegle += "  OR  "; //OU
+                        sRegle.append("  OR  "); //OU
 
                     if ( (iNombreItemsQuantitatifs > 1) && (iNombreDisjonctions > 1) )
-                        sRegle += "( ";
+                        sRegle.append("( ");
 
                     bPremierItemInscrit = false;
-                    for (iIndiceItem = 0; iIndiceItem < iNombreItems; iIndiceItem++) {
-                        item = tItemsRegle[iIndiceItem];
-                        if (item.m_iTypeItem == Item.ITEM_TYPE_QUANTITATIF) {
-                            if (bPremierItemInscrit)
-                                sRegle += "  AND  "; //ET
-                            sRegle += ((ItemQuantitative)item).toString(iIndiceDisjonction);
+//                    for (iIndiceItem = 0; iIndiceItem < iNombreItems; iIndiceItem++) {
+//                        item = tItemsRegle.get(iIndiceItem);
+//                        if (item.m_iTypeItem == Item.ITEM_TYPE_QUANTITATIF) {
+//                            if (bPremierItemInscrit)
+//                                sRegle.append("  AND  "); //ET
+//                            sRegle.append(((ItemQuantitative)item).toString(iIndiceDisjonction));
+//                            bPremierItemInscrit = true;
+//                        }
+//                    }
+
+                    for (Item item : tItemsRegle){
+                        if (item.m_iTypeItem == Item.ITEM_TYPE_QUANTITATIF){
+                            if (bPremierItemInscrit){
+                                sRegle.append(" AND ");
+                            }
+                            sRegle.append(((ItemQuantitative)item).toString(iIndiceDisjonction));
                             bPremierItemInscrit = true;
                         }
-                    }               
+                    }
 
                     if ( (iNombreItemsQuantitatifs > 1) && (iNombreDisjonctions > 1) )
-                        sRegle += " )";            
+                        sRegle.append(" )");
                 }
 
                 if ( (bItemsQualitatifsPresents) && (iNombreDisjonctions > 1) )
-                        sRegle += " ) ";   
+                        sRegle.append(" ) ");
             }
         }
-
-        
-        return sRegle;
+        return sRegle.toString();
     }
     
-    
-    
-    
     public static void CalculerMesuresDiverses(AssociationRule [] tRegles, ResolutionContext contexte) {
-        AssociationRule regle = null;
+        AssociationRule regle;
         int iNombreRegles = 0;
         int iIndiceRegle = 0;
         int iNombreLignes = 0;
@@ -834,8 +779,7 @@ public class AssociationRule {
         
         if (iNombreRegles == 0)
             return;
-        
-       
+
         // On r�initialise les diverses mesures avant de faire les comptes :
         for (iIndiceRegle=0;iIndiceRegle<iNombreRegles;iIndiceRegle++) {
             regle = tRegles[iIndiceRegle];
@@ -845,10 +789,8 @@ public class AssociationRule {
             regle.m_iOccurrences_NonGauche_Droite = 0;
             regle.m_iOccurrences_NonGauche_NonDroite = 0;
 
-            
             regle.m_iOccurrences = 0;
         }
-        
         
         iNombreLignes = contexte.m_gestionnaireBD.ObtenirNombreLignes();
 
@@ -861,8 +803,8 @@ public class AssociationRule {
                 // V�rification de la couverture de tous les items qualitatifs de gauche ou si la ligne contient une valeur manquante :
                 bGaucheCouvert = true;
                 iIndiceItem=0;
-                while ( (bGaucheCouvert) && (iIndiceItem<regle.m_iNombreItemsGauche) ) {
-                    item = regle.m_tItemsGauche[iIndiceItem];
+                while ( (bGaucheCouvert) && (iIndiceItem<regle.getLeftItems().size()) ) {
+                    item = regle.m_tItemsGauche.get(iIndiceItem);
                     if (item.m_iTypeItem == Item.ITEM_TYPE_QUALITATIF) {
                         itemQual = (ItemQualitative)item;
                         bGaucheCouvert = ( itemQual.m_iIndiceValeur == itemQual.m_attributQual.m_colonneDonnees.m_tIDQualitatif[iIndiceLigne] );
@@ -873,8 +815,7 @@ public class AssociationRule {
                         bGaucheCouvert = (fValeurReelle != DatabaseAdmin.VALEUR_MANQUANTE_FLOAT);
                     }     
                     iIndiceItem++;
-                }                
-                
+                }
                 
                 // V�rification de la couverture de tous les items quantitatifs de gauche :
                 if (bGaucheCouvert) {
@@ -883,8 +824,8 @@ public class AssociationRule {
                     while ( (!bGaucheCouvert) && (iIndiceDisjonction<regle.m_iNombreDisjonctionsGaucheValides) ) {
                         bGaucheCouvert = true;
                         iIndiceItem=0;
-                        while ( (bGaucheCouvert) && (iIndiceItem<regle.m_iNombreItemsGauche) ) {
-                            item = regle.m_tItemsGauche[iIndiceItem];
+                        while ( (bGaucheCouvert) && (iIndiceItem<regle.getLeftItems().size()) ) {
+                            item = regle.m_tItemsGauche.get(iIndiceItem);
                             if (item.m_iTypeItem == Item.ITEM_TYPE_QUANTITATIF) {
                                 itemQuant = (ItemQuantitative)item;
                                 fValeurReelle = itemQuant.m_attributQuant.m_colonneDonnees.m_tValeurReelle[iIndiceLigne];
@@ -897,12 +838,11 @@ public class AssociationRule {
                     }
                 }
 
-                
                 // V�rification de la couverture de tous les items qualitatifs de droite ou si la ligne contient une valeur manquante :
                 bDroiteCouvert = true;
                 iIndiceItem=0;
                 while ( (bDroiteCouvert) && (iIndiceItem<regle.m_iNombreItemsDroite) ) {
-                    item = regle.m_tItemsDroite[iIndiceItem];
+                    item = regle.m_tItemsDroite.get(iIndiceItem);
                     if (item.m_iTypeItem == Item.ITEM_TYPE_QUALITATIF) {
                         itemQual = (ItemQualitative)item;
                         bDroiteCouvert = ( itemQual.m_iIndiceValeur == itemQual.m_attributQual.m_colonneDonnees.m_tIDQualitatif[iIndiceLigne] );
@@ -914,8 +854,7 @@ public class AssociationRule {
                     }     
                     iIndiceItem++;
                 }                
-                
-                
+
                 // V�rification de la couverture de tous les items quantitatifs de droite :
                 if (bDroiteCouvert) {
                     bDroiteCouvert = false;
@@ -924,7 +863,7 @@ public class AssociationRule {
                         bDroiteCouvert = true;
                         iIndiceItem=0;
                         while ( (bDroiteCouvert) && (iIndiceItem<regle.m_iNombreItemsDroite) ) {
-                            item = regle.m_tItemsDroite[iIndiceItem];
+                            item = regle.m_tItemsDroite.get(iIndiceItem);
                             if (item.m_iTypeItem == Item.ITEM_TYPE_QUANTITATIF) {
                                 itemQuant = (ItemQuantitative)item;
                                 fValeurReelle = itemQuant.m_attributQuant.m_colonneDonnees.m_tValeurReelle[iIndiceLigne];
@@ -936,9 +875,7 @@ public class AssociationRule {
                         iIndiceDisjonction++;
                     }
                 }
-                
-                
-                
+
                 if ( (bGaucheCouvert) && (bDroiteCouvert) )
                     regle.m_iOccurrences++;
                 
@@ -956,9 +893,29 @@ public class AssociationRule {
                 
                 if ( (!bGaucheCouvert) && (!bDroiteCouvert) )
                     regle.m_iOccurrences_NonGauche_NonDroite++;
-         
             }
         }
     }
-    
+
+    private HashSet<String> getRuleStringSet(List<Item> ruleList){
+        HashSet<String> itemStringSet = new HashSet<>();
+        for (Item item : ruleList){
+            itemStringSet.add(item.toString());
+        }
+        return itemStringSet;
+    }
+
+    public boolean equals(Object obj) {
+
+        if (obj == null) return false;
+
+        AssociationRule rule;
+
+        if (getClass() != obj.getClass())
+            return false;
+        else rule = (AssociationRule) obj;
+
+        return (this.getRuleStringSet(this.m_tItemsGauche).equals(rule.getRuleStringSet(rule.getLeftItems()))
+                && this.getRuleStringSet(rule.m_tItemsDroite).equals(rule.getRuleStringSet(rule.getRightItems())));
+    }
 }

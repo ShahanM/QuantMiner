@@ -39,8 +39,8 @@ public class DataColumn {
     public int [] m_tCumulSupportCroissant = null; // Table r�pertoriant les supports cumul� au niveau de chaque indice de valeur (unique). Pour trouver le support d'un intervalle, faire une soustraction des supports cumul�s au niveau des bornes
     public int m_iNombreValeursUniques = 0;
     
-    public float m_fValeurMin = 0.0f;
-    public float m_fValeurMax = 0.0f;
+    public float m_fValeurMin;
+    public float m_fValeurMax;
     private boolean m_bBornesReellesDefinies = false;
    
        

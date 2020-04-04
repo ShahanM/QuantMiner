@@ -24,7 +24,7 @@ import src.solver.*;
 public class DialogGraphQuality extends javax.swing.JDialog {
     
 
-    public class PanneauGrapheQualite extends JPanel {
+    public static class PanneauGrapheQualite extends JPanel {
 
         private BufferedImage m_graphe = null;
         private int m_iLargeurGraphe = 0;
@@ -276,7 +276,7 @@ public class DialogGraphQuality extends javax.swing.JDialog {
         int iNombrePoints = 0;
         
         iNombrePoints = m_tQualiteMoyenne.length;
-        m_panneauGrapheQualite = new PanneauGrapheQualite(iNombrePoints, 50+iNombrePoints, 500);
+        m_panneauGrapheQualite =new PanneauGrapheQualite(iNombrePoints, 50 + iNombrePoints, 500);
         
         m_panneauGrapheQualite.m_tQualiteMoyenne = m_tQualiteMoyenne;
         m_panneauGrapheQualite.m_tQualiteMax = m_tQualiteMax;

@@ -13,15 +13,11 @@
  */
 package src.apriori;
 
-import src.tools.dataStructures.*;
-
-
-
 public class ItemQualitative extends Item implements Comparable {
         
-    long m_lIdentifieur = 0;
-    public AttributQualitative m_attributQual = null;   // Attribut de la BD dont est issu l'item
-    public short m_iIndiceValeur = 0;                  // Indice de la valeur repr�sent�e par l'item parmi toutes celles de l'attribut 
+    private long m_lIdentifieur;
+    public AttributQualitative m_attributQual;   // Attribut de la BD dont est issu l'item
+    public short m_iIndiceValeur;                  // Indice de la valeur repr�sent�e par l'item parmi toutes celles de l'attribut
        
         
     public ItemQualitative(AttributQualitative attributQual, short iIndiceValeur) {
@@ -37,14 +33,12 @@ public class ItemQualitative extends Item implements Comparable {
         
         m_itemSuivant = null;
     }
-         
-   
     
     /**Get full Name of the item
      * @return name of the item
      */
     public String ObtenirNomCompletItem() {
-        String sChaineItem = null;
+        String sChaineItem;
         
         if (m_attributQual==null)
             return null;
@@ -97,9 +91,9 @@ public class ItemQualitative extends Item implements Comparable {
     
     //return something like COD_GEOL = Tv
     public String toString() {
-        String sItem = null;              //
-        String sNomAttribut = null;       //name of the attribute
-        String sValeurItem = null;        //value of the item
+        String sItem;              //
+        String sNomAttribut;       //name of the attribute
+        String sValeurItem;        //value of the item
         
         if (m_attributQual==null)
             return "Item nul";
@@ -118,25 +112,15 @@ public class ItemQualitative extends Item implements Comparable {
         
         return sItem;       
     }
-    
-    
-    
+
     public int compareTo(Object o) {
-        if (this.m_lIdentifieur > ((ItemQualitative)o).m_lIdentifieur)
-            return 1;
-        else if (this.m_lIdentifieur < ((ItemQualitative)o).m_lIdentifieur)
-            return -1;
-        else
-            return 0;       
+        return Long.compare(this.m_lIdentifieur, ((ItemQualitative) o).m_lIdentifieur);
     }
-    
-    
-    
+
     public boolean equals(Object obj) {
         if (obj == null)
             return false;
         else
             return ( this.m_lIdentifieur == ((ItemQualitative)obj).m_lIdentifieur );       
     }
-
 }

@@ -24,7 +24,7 @@ import src.database.*;
 public abstract class EvaluationBaseAlgorithm {
     
     
-    protected class RefItemQualitatif {
+    protected static class RefItemQualitatif {
         public DataColumn m_colonneDonnees;  // Colonne de la BD o� sont stock�es les valeurs de l'attribut en m�moire 
         public short m_iIndiceValeurAttribut;    // Identifiant de la sous-valeur de l'attribut qui �quivaut � l'item
         public String m_sChaineIdentifiantItem;
@@ -37,7 +37,7 @@ public abstract class EvaluationBaseAlgorithm {
     }
     
     
-    protected class RefItemQuantitatif {
+    protected static class RefItemQuantitatif {
         public DataColumn m_colonneDonnees = null;
         
         public RefItemQuantitatif(DataColumn colonneDonnees) {
@@ -49,7 +49,7 @@ public abstract class EvaluationBaseAlgorithm {
     
     /**potential rules
      */
-    protected class ReglePotentielle implements Comparable {
+    protected static class ReglePotentielle implements Comparable {
 
         public int m_iDimension = 0;
         public float m_tIntervalleMin [] = null;   // Bornes minimales des 'm_iDimension' intervalles
@@ -282,6 +282,8 @@ public abstract class EvaluationBaseAlgorithm {
         if (iIndice1 > iIndiceMax) iIndice1 = iIndiceMax;
         if (iIndice2 > iIndiceMax) iIndice2 = iIndiceMax;
 
+        iIndice1 = 1;//EMIL: added this Oct 17 to fix the lower bound (not in the original code)
+        //iIndice2 = iIndiceMax;//EMIL: added this Oct 17 to fix the upper bound (not in the original code)
         // Affectation des bornes dans la r�gle :
         reglePotentielle.m_tIndiceMin[iIndiceIntervalle] = iIndice1;
         reglePotentielle.m_tIndiceMax[iIndiceIntervalle] = iIndice2;
@@ -368,7 +370,7 @@ public abstract class EvaluationBaseAlgorithm {
             
             // G�n�ration d'une r�gle sans initialisation : c'est la classe fille qui se chargera
             // de lui attribuer des valeurs initiales
-            reglePotentielle = new ReglePotentielle(m_iDimension, m_iNombreTotalIntervalles);
+            reglePotentielle =new ReglePotentielle(m_iDimension, m_iNombreTotalIntervalles);
                
             InitialiserReglePotentielle(reglePotentielle, iIndiceReglePotentielle);
             
@@ -378,11 +380,11 @@ public abstract class EvaluationBaseAlgorithm {
     
         // Cr�ation de la r�gle potentielle repr�sentant celle qui a eu la meilleure qualit� trouv�e jusqu'alors :
         // creation of the potential rule with the best quality so far
-        m_meilleureReglePotentielle = new ReglePotentielle(m_iDimension, m_iNombreTotalIntervalles);
+        m_meilleureReglePotentielle =new ReglePotentielle(m_iDimension, m_iNombreTotalIntervalles);
         
         // Cr�ation d'un r�gle potentielle destin�e � m�moriser la meilleure r�gle trouv�e jusqu'alors
         // lors des multiples passes pour obtenir des r�gles disjonctives :
-        m_derniereReglePotentielleValide = new ReglePotentielle(m_iDimension, m_iNombreTotalIntervalles);
+        m_derniereReglePotentielleValide =new ReglePotentielle(m_iDimension, m_iNombreTotalIntervalles);
         
         m_iNombreReglesPotentiellesAEvaluer = m_iNombreReglesPotentielles;    
         EvaluerReglesPotentielles();
@@ -449,12 +451,12 @@ public abstract class EvaluationBaseAlgorithm {
             if (item != null) {
                 if (item.m_iTypeItem == Item.ITEM_TYPE_QUALITATIF) {
                     itemQual = (ItemQualitative)item;
-                    m_tItemsQualCond[iIndiceAjoutQual] = new RefItemQualitatif(itemQual.m_attributQual.m_colonneDonnees, itemQual.m_iIndiceValeur, itemQual.ObtenirNomCompletItem());
+                    m_tItemsQualCond[iIndiceAjoutQual] =new RefItemQualitatif(itemQual.m_attributQual.m_colonneDonnees, itemQual.m_iIndiceValeur, itemQual.ObtenirNomCompletItem());
                     iIndiceAjoutQual++;
                 }
                 else if (item.m_iTypeItem == Item.ITEM_TYPE_QUANTITATIF) {
                     itemQuant = (ItemQuantitative)item;
-                    m_tItemsQuantCond[iIndiceAjoutQuant] = new RefItemQuantitatif(itemQuant.m_attributQuant.m_colonneDonnees);
+                    m_tItemsQuantCond[iIndiceAjoutQuant] =new RefItemQuantitatif(itemQuant.m_attributQuant.m_colonneDonnees);
                     iIndiceAjoutQuant++;
                 }
             }
@@ -470,12 +472,12 @@ public abstract class EvaluationBaseAlgorithm {
             if (item != null) {
                 if (item.m_iTypeItem == Item.ITEM_TYPE_QUALITATIF) {
                     itemQual = (ItemQualitative)item;
-                    m_tItemsQualObj[iIndiceAjoutQual] = new RefItemQualitatif(itemQual.m_attributQual.m_colonneDonnees, itemQual.m_iIndiceValeur, itemQual.ObtenirNomCompletItem());
+                    m_tItemsQualObj[iIndiceAjoutQual] =new RefItemQualitatif(itemQual.m_attributQual.m_colonneDonnees, itemQual.m_iIndiceValeur, itemQual.ObtenirNomCompletItem());
                     iIndiceAjoutQual++;
                 }
                 else if (item.m_iTypeItem == Item.ITEM_TYPE_QUANTITATIF) {
                     itemQuant = (ItemQuantitative)item;
-                    m_tItemsQuantObj[iIndiceAjoutQuant] = new RefItemQuantitatif(itemQuant.m_attributQuant.m_colonneDonnees);
+                    m_tItemsQuantObj[iIndiceAjoutQuant] =new RefItemQuantitatif(itemQuant.m_attributQuant.m_colonneDonnees);
                     iIndiceAjoutQuant++;
                 }
             }
@@ -970,6 +972,108 @@ public abstract class EvaluationBaseAlgorithm {
             m_meilleureReglePotentielle.Copier(m_tReglesPotentielles[m_iNombreReglesPotentielles-1]);
     }
 
+    /**
+     * Emil: the k-th best rule
+     * @param k
+     * @return
+     */
+    public AssociationRule ObtenirKthMeilleureRegle(int k, AssociationRule regle) {
+        if (k == 0) {
+            AssociationRule br = ObtenirMeilleureRegle();
+            br.m_fQualite = m_tReglesPotentielles[m_iNombreReglesPotentielles-1].m_fQualite;
+            return br;
+        }
+
+        float bestScore = m_tReglesPotentielles[m_iNombreReglesPotentielles-1].m_fQualite;
+        int count = 0;
+        for (int i = 1; i <= m_iNombreReglesPotentielles; i++) {
+            if (m_tReglesPotentielles[m_iNombreReglesPotentielles-i].m_fQualite < bestScore) {
+                count += 1;
+                bestScore = m_tReglesPotentielles[m_iNombreReglesPotentielles-i].m_fQualite;
+            }
+            if (count == k) {
+                ReglePotentielle r = m_tReglesPotentielles[m_iNombreReglesPotentielles-i];
+                regle.CopierRegleAssociation(m_schemaRegleOptimale);
+                CopyFromPotentielle(regle, r);
+                regle.m_fQualite = r.m_fQualite;
+                return regle;
+            }
+        }
+
+        return null;
+    }
+
+
+    private void CopyFromPotentielle(AssociationRule m_schemaRegleOptimale, ReglePotentielle m_meilleureReglePotentielle) {
+        Item item = null;
+        ItemQualitative itemQual = null;
+        ItemQuantitative itemQuant = null;
+        int iIndiceItem = 0;
+        int iIndiceItemQuant = 0;
+        float fConfianceRegle = 0.0f;
+        int iIndiceIntervalleReglePotentielle = 0;
+        int iIndiceDisjonction = 0;
+
+        if (m_schemaRegleOptimale == null)
+            return;
+
+        // Determination des bornes optimales dans la partie gauche de la rï¿½gle :
+
+        iIndiceIntervalleReglePotentielle = 0;
+        iIndiceItemQuant = 0;
+        for (iIndiceItem = 0; iIndiceItem < m_schemaRegleOptimale.getLeftItems().size(); iIndiceItem++) {
+
+            item = m_schemaRegleOptimale.ObtenirItemGauche(iIndiceItem);
+            if (item.m_iTypeItem == Item.ITEM_TYPE_QUANTITATIF) {
+                itemQuant = (ItemQuantitative)item;
+                for (iIndiceDisjonction = 0; iIndiceDisjonction < m_iNombreDisjonctionsGaucheValides; iIndiceDisjonction++) {
+                    itemQuant.m_tBornes[iIndiceDisjonction*2] = m_meilleureReglePotentielle.m_tIntervalleMin[iIndiceIntervalleReglePotentielle];
+                    itemQuant.m_tBornes[iIndiceDisjonction*2+1] = m_meilleureReglePotentielle.m_tIntervalleMax[iIndiceIntervalleReglePotentielle];
+                    iIndiceIntervalleReglePotentielle++;
+                }
+                iIndiceItemQuant++;
+                iIndiceIntervalleReglePotentielle += m_schemaRegleOptimale.m_iNombreDisjonctionsGauche - iIndiceDisjonction;
+            }
+
+        }
+
+
+        // Determination des bornes optimales dans la partie droite de la regle :
+
+        iIndiceIntervalleReglePotentielle = this.m_iDebutIntervallesDroite;
+        iIndiceItemQuant = m_iNombreItemsQuantCond;
+        for (iIndiceItem=0;iIndiceItem<m_schemaRegleOptimale.getRightItems().size();iIndiceItem++) {
+
+            item = m_schemaRegleOptimale.ObtenirItemDroite(iIndiceItem);
+            if (item.m_iTypeItem == Item.ITEM_TYPE_QUANTITATIF) {
+                itemQuant = (ItemQuantitative)item;
+                for (iIndiceDisjonction=0; iIndiceDisjonction<m_iNombreDisjonctionsDroiteValides; iIndiceDisjonction++) {
+                    itemQuant.m_tBornes[iIndiceDisjonction*2] = m_meilleureReglePotentielle.m_tIntervalleMin[iIndiceIntervalleReglePotentielle];
+                    itemQuant.m_tBornes[iIndiceDisjonction*2+1] = m_meilleureReglePotentielle.m_tIntervalleMax[iIndiceIntervalleReglePotentielle];
+                    iIndiceIntervalleReglePotentielle++;
+                }
+                iIndiceItemQuant++;
+                iIndiceIntervalleReglePotentielle += m_schemaRegleOptimale.m_iNombreDisjonctionsDroite - iIndiceDisjonction;
+            }
+
+        }
+
+        m_schemaRegleOptimale.m_iNombreDisjonctionsGaucheValides = this.m_iNombreDisjonctionsGaucheValides;
+        m_schemaRegleOptimale.m_iNombreDisjonctionsDroiteValides = this.m_iNombreDisjonctionsDroiteValides;
+
+        //m_meilleureReglePotentielle.m_iSupportCond = m_iSupportCumuleCond;
+        //m_meilleureReglePotentielle.m_iSupportRegle = m_iSupportCumuleRegle;
+
+        m_schemaRegleOptimale.AssignerNombreOccurrences( m_meilleureReglePotentielle.m_iSupportRegle );
+        m_schemaRegleOptimale.AssignerSupport( ((float)m_meilleureReglePotentielle.m_iSupportRegle) / ((float)m_iNombreTransactions) );
+
+        if (m_meilleureReglePotentielle.m_iSupportCond > 0)
+            fConfianceRegle = ((float)m_meilleureReglePotentielle.m_iSupportRegle) / ((float)m_meilleureReglePotentielle.m_iSupportCond);
+        else
+            fConfianceRegle = 0.0f;
+        m_schemaRegleOptimale.AssignerConfiance(fConfianceRegle);
+    }
+
     
     public AssociationRule ObtenirMeilleureRegle() {
         Item item = null;
@@ -988,7 +1092,7 @@ public abstract class EvaluationBaseAlgorithm {
         
         iIndiceIntervalleReglePotentielle = 0;
         iIndiceItemQuant = 0;
-        for (iIndiceItem = 0; iIndiceItem < m_schemaRegleOptimale.m_iNombreItemsGauche; iIndiceItem++) {
+        for (iIndiceItem = 0; iIndiceItem < m_schemaRegleOptimale.getLeftItems().size(); iIndiceItem++) {
             
             item = m_schemaRegleOptimale.ObtenirItemGauche(iIndiceItem);
             if (item.m_iTypeItem == Item.ITEM_TYPE_QUANTITATIF) {
@@ -1009,7 +1113,7 @@ public abstract class EvaluationBaseAlgorithm {
         
         iIndiceIntervalleReglePotentielle = this.m_iDebutIntervallesDroite;
         iIndiceItemQuant = m_iNombreItemsQuantCond;
-        for (iIndiceItem=0;iIndiceItem<m_schemaRegleOptimale.m_iNombreItemsDroite;iIndiceItem++) {
+        for (iIndiceItem=0;iIndiceItem<m_schemaRegleOptimale.getRightItems().size();iIndiceItem++) {
             
             item = m_schemaRegleOptimale.ObtenirItemDroite(iIndiceItem);
             if (item.m_iTypeItem == Item.ITEM_TYPE_QUANTITATIF) {
@@ -1095,10 +1199,13 @@ public abstract class EvaluationBaseAlgorithm {
         return m_tReglesPotentielles[0].m_fQualite;
     }
 
-    
     public void EvaluerQualiteReglePotentielle(ReglePotentielle reglePotentielle) {
+        boolean VARIANT1 = false;//remove small interval penalty; (original = FALSE)
+        boolean VARIANT2 = false;//new gain = Conf - minConf (original = FALSE)
+        boolean VARIANT3 = false;// new penaly for small interval: (Prop I)^2 (original = FALSE)
+        boolean VARIANT4 = true;//Fitness(A->B)  := Prop(I)^2     if Conf(A->B) > MinConf and Supp(A) >MinSupp; 0 otherwise
         int iIndiceDimension = 0;
-        int iIndiceDisjonction = 0;       
+        int iIndiceDisjonction = 0;
         int iNombreDisjonctions = 0;
         int iIndiceIntervalle = 0;
         int iSupportIntervalle = 0;
@@ -1106,29 +1213,38 @@ public abstract class EvaluationBaseAlgorithm {
         float fTauxCouvertureDomaine1 = 0.0f;
         float fTauxCouvertureDomaine2 = 0.0f;
         DataColumn colonneDonnees = null;
-        
+
         // 1 �re mesure de qualit� :
         /*            individu.m_fQualite = (float)individu.m_iSupportRegle - m_fMinConf * (float)individu.m_iSupportCond;
                     if ((float)individu.m_iSupportRegle <  m_fMinSupp*(float)m_iNombreTransactions)
                         individu.m_fQualite = -(float)m_iNombreTransactions;
         */
-        
-            
+
+
         // 2nde mesure de qualit� : on pond�re par le taux de couverture du domaine de chaque valeur quantitative
         //calculate the gain
         reglePotentielle.m_fQualite = (float)reglePotentielle.m_iSupportRegle - m_fMinConf * (float)reglePotentielle.m_iSupportCond;
-            
+        if (VARIANT2) {//new gain
+            reglePotentielle.m_fQualite = reglePotentielle.m_fQualite / (float)reglePotentielle.m_iSupportCond;
+        }
+        if (VARIANT4) {//Fitness(A->B)  := Prop(I)^2     if Conf(A->B) > MinConf and Supp(A) >MinSupp; 0 otherwise
+            reglePotentielle.m_fQualite = 0.0f;
+            if ((float)reglePotentielle.m_iSupportRegle/(float)reglePotentielle.m_iSupportCond > m_fMinConf && reglePotentielle.m_iSupportCond > m_fMinSupp) {
+                reglePotentielle.m_fQualite = 1.0f;
+            }
+        }
+
         //reglePotentielle.m_fQualite /= (float)m_iNombreTransactions;
-        
-        
-        if (reglePotentielle.m_fQualite > 0.0f) {
+
+
+        if (!VARIANT1 && reglePotentielle.m_fQualite > 0.0f || VARIANT4) {
 
             for (iIndiceDimension=0; iIndiceDimension<m_iDimension; iIndiceDimension++) {
 
                 if (  ( m_bPrendreEnCompteQuantitatifsGauche && (iIndiceDimension<m_iNombreItemsQuantCond) )
-                    ||( m_bPrendreEnCompteQuantitatifsDroite && (iIndiceDimension>=m_iNombreItemsQuantCond) )  ) {
+                        ||( m_bPrendreEnCompteQuantitatifsDroite && (iIndiceDimension>=m_iNombreItemsQuantCond) )  ) {
 
-                    
+
                     if (iIndiceDimension<m_iNombreItemsQuantCond) {
                         iIndiceIntervalle = (iIndiceDimension*m_schemaRegleOptimale.m_iNombreDisjonctionsGauche) + m_iDisjonctionGaucheCourante;
                         colonneDonnees = m_tItemsQuantCond[ iIndiceDimension ].m_colonneDonnees;
@@ -1146,14 +1262,14 @@ public abstract class EvaluationBaseAlgorithm {
                     fTauxCouvertureDomaine1 = reglePotentielle.m_tIntervalleMax[iIndiceIntervalle] - reglePotentielle.m_tIntervalleMin[iIndiceIntervalle];
                     fTauxCouvertureDomaine1 /= (colonneDonnees.m_fValeurMax - colonneDonnees.m_fValeurMin);
 
-                    
+
                     iSupportMax = colonneDonnees.m_iNombreValeursReellesCorrectes;
                     if (iSupportMax > 0) {
                         iSupportIntervalle = colonneDonnees.ObtenirSupportIntervalle(reglePotentielle.m_tIndiceMin[iIndiceIntervalle], reglePotentielle.m_tIndiceMax[iIndiceIntervalle]);
                         fTauxCouvertureDomaine2 = ((float)iSupportIntervalle) / ((float)iSupportMax);
                     }
-                    
-/*                        
+
+/*
                     if (iIndiceDimension<m_iNombreItemsQuantCond)
                         fTauxCouvertureDomaine2 = 1.0f;
                     else {
@@ -1162,8 +1278,22 @@ public abstract class EvaluationBaseAlgorithm {
                         fTauxCouvertureDomaine2 = ((float)iSupportIntervalle) / ((float)iSupportMax);
                     }
 */
-
-                    reglePotentielle.m_fQualite *= (1.0f-fTauxCouvertureDomaine1) * (1.0f-fTauxCouvertureDomaine2);
+                    if (VARIANT4) {
+                        reglePotentielle.m_fQualite *= (fTauxCouvertureDomaine1) * (fTauxCouvertureDomaine1);
+                        //* (fTauxCouvertureDomaine2) * (fTauxCouvertureDomaine2);
+                    } else if (VARIANT3) {
+                        //reglePotentielle.m_fQualite *= (fTauxCouvertureDomaine1) * (fTauxCouvertureDomaine2);
+                        //reglePotentielle.m_fQualite *= (fTauxCouvertureDomaine1);
+                        reglePotentielle.m_fQualite *= (fTauxCouvertureDomaine1) * (fTauxCouvertureDomaine1)
+                                * (fTauxCouvertureDomaine2) * (fTauxCouvertureDomaine2);
+                    } else {
+                        //original
+                        //reglePotentielle.m_fQualite *= (1.0f-fTauxCouvertureDomaine1) * (1.0f-fTauxCouvertureDomaine2);
+                        //changed
+                        //reglePotentielle.m_fQualite *= ((1.0f-fTauxCouvertureDomaine1) * (1.0f-fTauxCouvertureDomaine1)
+                        // * (1.0f-fTauxCouvertureDomaine2) * (1.0f-fTauxCouvertureDomaine2));// * (1.0f-fTauxCouvertureDomaine2);
+                        reglePotentielle.m_fQualite *= (fTauxCouvertureDomaine1 * fTauxCouvertureDomaine1);
+                    }
 
                 }
             }
@@ -1174,5 +1304,5 @@ public abstract class EvaluationBaseAlgorithm {
             reglePotentielle.m_fQualite -= (float)m_iNombreTransactions + (float)reglePotentielle.m_iSupportRegle - m_fMinSupp*(float)m_iNombreTransactions ;//) / ((float)m_iNombreTransactions);
 
     }
-    
+
 }

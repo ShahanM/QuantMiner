@@ -32,7 +32,7 @@ public class DialogSaveProfile extends javax.swing.JDialog { //profile--> save
  
     
     // Classe permettant de maintenir les donn�es internes � la bo�te de dialogue, m�me apr�s sa fermeture :
-    public class DialogEnregistrementProfil_Donnees {
+    public static class DialogEnregistrementProfil_Donnees {
         public int m_iSelectionUtilisateur = 0;
         public int m_iMasqueEnregistrement = 0;
         
@@ -57,7 +57,7 @@ public class DialogSaveProfile extends javax.swing.JDialog { //profile--> save
         
         initComponents();
                 
-        m_donnees = new DialogEnregistrementProfil_Donnees();
+        m_donnees =new DialogEnregistrementProfil_Donnees();
         
         switch (m_iPanneauCourant) {
             

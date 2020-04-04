@@ -14,18 +14,17 @@
 package src.graphicalInterface;
 
 
-import java.io.*;
-import java.util.*;
-import javax.swing.*;
+import src.apriori.AssociationRule;
+import src.apriori.OptimizerAprioriQual;
+import src.geneticAlgorithm.OptimizerGeneticAlgo;
+import src.simulatedAnnealing.OptimizerSimulatedAnnealing;
+import src.solver.ResolutionContext;
+import src.solver.RuleOptimizer;
+import src.solver.RuleTester;
+import src.tools.ENV;
 
-import src.apriori.*;
-import src.database.*;
-import src.geneticAlgorithm.*;
-import src.simulatedAnnealing.*;
-import src.solver.*;
-import src.tools.*;
-
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 
 public class PanelGenetic extends DatabasePanelAssistant { //step 4
@@ -33,15 +32,15 @@ public class PanelGenetic extends DatabasePanelAssistant { //step 4
    
     
     private RuleTester m_calculateur = null; //A very important member, it derives from thread
-    private int m_iMaxReglesTestees = 0;        //max number of testing rule? 
-    private int m_iIndiceRegleAffichee = 0;     //Affichee means display--the index of the rule being displayed
+    private int m_iMaxReglesTestees;        //max number of testing rule?
+    private int m_iIndiceRegleAffichee;     //Affichee means display--the index of the rule being displayed
     private boolean m_bResultatAffiche = false; // Indicate que la total des r�gles calcul�es ont �t� affich�es
     
     
     class IndicateurCalculReglesGenerique extends RuleTester.IndicateurCalculRegles {
-        PanelGenetic m_panneauParent = null;
+        PanelGenetic m_panneauParent;
         
-        public IndicateurCalculReglesGenerique(PanelGenetic panneauParent) {
+        IndicateurCalculReglesGenerique(PanelGenetic panneauParent) {
             super();
             
             m_panneauParent = panneauParent;
@@ -49,7 +48,7 @@ public class PanelGenetic extends DatabasePanelAssistant { //step 4
         
         //indicate that calculation is finished
         public void IndiquerFinCalcul() {
-            DialogEndComputeRules fenetreFinCalcul = null;
+            DialogEndComputeRules fenetreFinCalcul;
 
             if (!ENV.AVERTIR_FIN_CALCUL) //AVERTIR notice finishing calculation
                 return;
@@ -60,7 +59,7 @@ public class PanelGenetic extends DatabasePanelAssistant { //step 4
                 m_panneauParent.m_contexteResolution.m_fenetreProprietaire.setExtendedState( java.awt.Frame.MAXIMIZED_BOTH );
                 m_panneauParent.m_contexteResolution.m_fenetreProprietaire.toFront();
             }
-            fenetreFinCalcul.show();
+            fenetreFinCalcul.setVisible(true);
         }
         
         //send information
@@ -227,7 +226,9 @@ public class PanelGenetic extends DatabasePanelAssistant { //step 4
 
         jZoneTexteRegles.setText("");  //set rule text area empty
         jTextAreaContexte.setText(""); //set context text area empty
-        
+
+        System.out.println("Calculation started");
+
         //create an optimizer
         switch (super.m_contexteResolution.m_iTechniqueResolution) {
             case ResolutionContext.TECHNIQUE_APRIORI_QUAL :
@@ -271,7 +272,8 @@ public class PanelGenetic extends DatabasePanelAssistant { //step 4
             m_calculateur.ArreterExecution();
             
             if (!m_calculateur.EstResultatDisponible())
-                while (m_calculateur.isAlive()) {};
+                System.out.println("We are in that dreaded if statement");
+                while (m_calculateur.isAlive()) { System.out.println("wololo");};
 
             if (bEnregistrerRegles)
                 if (super.m_contexteResolution != null)

@@ -348,7 +348,7 @@ public class MainWindow extends javax.swing.JFrame {
        		int index = sFichierChoisi.lastIndexOf('.');
        		if (index < 0)
        			return;
-        	String extension = sFichierChoisi.substring(index + 1, sFichierChoisi.length()).toLowerCase();
+        	String extension = sFichierChoisi.substring(index + 1).toLowerCase();
         	gestionnaireBD = new DatabaseAdmin(sFichierChoisi, extension);
             setTitle("QuantMiner " +  gestionnaireBD.m_sNomBaseDeDonnees);
 

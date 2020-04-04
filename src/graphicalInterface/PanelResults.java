@@ -119,17 +119,13 @@ public class PanelResults extends DatabasePanelAssistant { //step 5
         switch (m_contexteResolution.m_iTechniqueResolution) {
             
             case ResolutionContext.TECHNIQUE_APRIORI_QUAL :
-                super.DefinirPanneauPrecedent(MainWindow.PANNEAU_TECH_GENERIQUE);
-                break;
-            
+
             case ResolutionContext.TECHNIQUE_ALGO_GENETIQUE :
-                super.DefinirPanneauPrecedent(MainWindow.PANNEAU_TECH_GENERIQUE);
-                break;
-                
+
             case ResolutionContext.TECHNIQUE_RECUIT_SIMULE :
                 super.DefinirPanneauPrecedent(MainWindow.PANNEAU_TECH_GENERIQUE);
                 break;
-                
+
             case ResolutionContext.TECHNIQUE_CHARGEMENT :
                 super.DefinirPanneauPrecedent(MainWindow.PANNEAU_CONFIG_TECHNIQUE);
                 break;
@@ -379,35 +375,35 @@ public class PanelResults extends DatabasePanelAssistant { //step 5
     		boolean running = false;
     		
     	if (leftQualitative != null){
-    	Iterator<Qualitative> iterLeftQuali = leftQualitative.iterator();
-    	while(iterLeftQuali.hasNext()){
-    	   Qualitative ruleElement = (Qualitative) iterLeftQuali.next();
-    	   int index = csvParser.ObtenirIndiceChamp(ruleElement.getM_name());
-    	   if (csvParser.m_data[line][index].equals(ruleElement.getM_value()))
-    	       running = true;
-    	   else
-    		   {
-    		    running = false;
-    		    break;
-    		   }
-    	 }
+            Iterator<Qualitative> iterLeftQuali = leftQualitative.iterator();
+            while(iterLeftQuali.hasNext()){
+               Qualitative ruleElement = (Qualitative) iterLeftQuali.next();
+               int index = csvParser.ObtenirIndiceChamp(ruleElement.getM_name());
+               if (csvParser.m_data[line][index].equals(ruleElement.getM_value()))
+                   running = true;
+               else
+                   {
+                    running = false;
+                    break;
+                   }
+            }
     	}
     	
     	if (!running) continue;
     	
     	if (rightQualitative != null){
-    	Iterator<Qualitative> iterRightQuali = rightQualitative.iterator();
-    	while(iterRightQuali.hasNext()){
-    	   Qualitative ruleElement = (Qualitative) iterRightQuali.next();
-    	   int index = csvParser.ObtenirIndiceChamp(ruleElement.getM_name());
-    	   if (csvParser.m_data[line][index].equals(ruleElement.getM_value()))
-    	       running = true;
-    	   else
-    		   {
-    		    running = false;
-    		    break;
-    		   }
-    	}
+            Iterator<Qualitative> iterRightQuali = rightQualitative.iterator();
+            while(iterRightQuali.hasNext()){
+               Qualitative ruleElement = (Qualitative) iterRightQuali.next();
+               int index = csvParser.ObtenirIndiceChamp(ruleElement.getM_name());
+               if (csvParser.m_data[line][index].equals(ruleElement.getM_value()))
+                   running = true;
+               else
+                   {
+                    running = false;
+                    break;
+                   }
+            }
     	}
     	
     	if (!running) continue;

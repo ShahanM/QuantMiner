@@ -64,7 +64,7 @@ public class PanelRuleGraphs extends JPanel {
             m_fontItem = new Font("Dialog", Font.BOLD|Font.ITALIC, 12);
                 
         
-        iNombreTotalItems = m_regle.m_iNombreItemsGauche + m_regle.m_iNombreItemsDroite;
+        iNombreTotalItems = m_regle.getLeftItems().size() + m_regle.getRightItems().size();
         m_iLargeurGraphe = 256;
         m_iHauteurGraphe = 300;
         
@@ -90,10 +90,10 @@ public class PanelRuleGraphs extends JPanel {
         
         graphe = m_graphes[iIndiceItem];
         
-        if (iIndiceItem < m_regle.m_iNombreItemsGauche)
+        if (iIndiceItem < m_regle.getLeftItems().size())
             item = m_regle.ObtenirItemGauche(iIndiceItem);
         else
-            item = m_regle.ObtenirItemDroite(iIndiceItem - m_regle.m_iNombreItemsGauche);
+            item = m_regle.ObtenirItemDroite(iIndiceItem - m_regle.getLeftItems().size());
         
         if (item == null)
             return;
@@ -146,7 +146,7 @@ public class PanelRuleGraphs extends JPanel {
         if (m_regle == null)
             return;
         
-        iNombreTotalItems = m_regle.m_iNombreItemsGauche + m_regle.m_iNombreItemsDroite;
+        iNombreTotalItems = m_regle.getLeftItems().size() + m_regle.getRightItems().size();
 
         g2D = (Graphics2D)g;
         

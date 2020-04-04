@@ -13,16 +13,17 @@
  */
 package src.apriori;
 
-import src.database.*;
+import src.database.DataColumn;
 
 
 
 public class AttributQuantitative {
     
-    String m_sNomAttribut;
-    float m_fBorneMin, m_fBorneMax;
+    private String m_sNomAttribut;
+    private float m_fBorneMin = 0.0f;
+    private float m_fBorneMax = 0.0f;
     
-    public DataColumn m_colonneDonnees = null; // Colonne correspondant � l'attribut dans la base de donn�es
+    public DataColumn m_colonneDonnees; // Colonne correspondant � l'attribut dans la base de donn�es
     
     public AttributQuantitative(String sNomAttribut, DataColumn colonneDonnees) {
         
@@ -33,29 +34,33 @@ public class AttributQuantitative {
             m_fBorneMin = m_colonneDonnees.ObtenirBorneMin();
             m_fBorneMax = m_colonneDonnees.ObtenirBorneMax();
         }
-        else
-            m_fBorneMin = m_fBorneMax = 0.0f;
     }
-    
 
-    
     public String ObtenirNom() {
         return m_sNomAttribut;
     }
 
-   
-   
+    public float getM_fBorneMin(){
+        return m_fBorneMin;
+    }
+
+    public float getM_fBorneMax(){
+        return m_fBorneMax;
+    }
+
     // Deux attributes sont �gaux si et seulement si ils ont le m�me nom :
     public boolean equals(Object obj) {
         
-        if (obj==null) return false;
+        if (obj == null) return false;
+
+        if (getClass() != obj.getClass())
+            return false;
         
         if ( (m_sNomAttribut==null) || ( ((AttributQuantitative)obj).m_sNomAttribut==null) )
             return false;
         
         return ( m_sNomAttribut.equals( ((AttributQuantitative)obj).m_sNomAttribut ) );
     }
-    
 }
     
     

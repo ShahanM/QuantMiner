@@ -13,18 +13,21 @@
  */
 package src.graphicalInterface;
 
-import javax.swing.*;
-
-import src.apriori.*;
-import src.solver.*;
-import src.tools.*;
+import src.apriori.AssociationRule;
+import src.apriori.Item;
+import src.apriori.ItemQuantitative;
+import src.solver.ResolutionContext;
 
 import java.awt.*;
-import java.util.*;
-import java.io.*;
-import java.awt.font.*;
-import java.awt.geom.*;
-import java.awt.image.*;
+import java.awt.font.FontRenderContext;
+import java.awt.font.LineMetrics;
+import java.awt.font.TextLayout;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.List;
 /*
 The com.sun.image.codec.jpeg.* package is deprecated for Java versions after 7. 
 This import statement is therefore commented out to avoid the "not found" error messages that appear when this package is called.
@@ -136,7 +139,7 @@ public class RuleBrowser extends javax.swing.JPanel { //step 5 the third panel
         int iIndiceCoteRegle = 0;
         int iPositionTexteX = 0;
         int iNombreItems = 0;
-        Item tItemsRegle [] = null; 
+        List<Item> tItemsRegle;
         int iPositionItemsQuantX = 0;
         int iLargeurMaxItemsQuantX = 0;
         
@@ -173,16 +176,16 @@ public class RuleBrowser extends javax.swing.JPanel { //step 5 the third panel
         for (iIndiceCoteRegle = 0; iIndiceCoteRegle < 2; iIndiceCoteRegle++) {
             //left side
             if (iIndiceCoteRegle==0) {
-                iNombreItems = regle.m_iNombreItemsGauche;
-                tItemsRegle = regle.m_tItemsGauche;
+                iNombreItems = regle.getLeftItems().size();
+                tItemsRegle = regle.getLeftItems();
                 iNombreItemsQuantitatifs = regle.CompterItemsGaucheSelonType(Item.ITEM_TYPE_QUANTITATIF);
                 iNombreDisjonctions = regle.m_iNombreDisjonctionsGaucheValides;
                 iLargeurMaxi = iLargeurMaxiGauche;
                 iPositionTexteX = 20;
             }
             else {
-                iNombreItems = regle.m_iNombreItemsDroite;
-                tItemsRegle = regle.m_tItemsDroite;
+                iNombreItems = regle.getRightItems().size();
+                tItemsRegle = regle.getRightItems();
                 iNombreItemsQuantitatifs = regle.CompterItemsDroiteSelonType(Item.ITEM_TYPE_QUANTITATIF);
                 iNombreDisjonctions = regle.m_iNombreDisjonctionsDroiteValides;
                 iLargeurMaxi = iLargeurMaxiDroite;
@@ -196,7 +199,7 @@ public class RuleBrowser extends javax.swing.JPanel { //step 5 the third panel
            
             bPremierItemInscrit = false;
             for (iIndiceItem = 0; iIndiceItem < iNombreItems; iIndiceItem++) {
-                item = tItemsRegle[iIndiceItem];
+                item = tItemsRegle.get(iIndiceItem);
                 if (item.m_iTypeItem == Item.ITEM_TYPE_QUALITATIF) {
                     if (bPremierItemInscrit)
                         fHauteurCumuleeElement += 15.0f;
@@ -234,7 +237,7 @@ public class RuleBrowser extends javax.swing.JPanel { //step 5 the third panel
                 
                     bPremierItemInscrit = false;
                     for (iIndiceItem = 0; iIndiceItem < iNombreItems; iIndiceItem++) {
-                        item = tItemsRegle[iIndiceItem];
+                        item = tItemsRegle.get(iIndiceItem);
                         if (item.m_iTypeItem == Item.ITEM_TYPE_QUANTITATIF) {
                             if (bPremierItemInscrit)
                                 fHauteurCumuleeElement += 15.0f;                            
@@ -302,14 +305,14 @@ public class RuleBrowser extends javax.swing.JPanel { //step 5 the third panel
         for (iIndiceCoteRegle = 0; iIndiceCoteRegle < 2; iIndiceCoteRegle++) {
             //left side
             if (iIndiceCoteRegle==0) {
-                iNombreItems = regle.m_iNombreItemsGauche;
-                tItemsRegle = regle.m_tItemsGauche;
+                iNombreItems = regle.getLeftItems().size();
+                tItemsRegle = regle.getLeftItems();
                 iNombreItemsQuantitatifs = regle.CompterItemsGaucheSelonType(Item.ITEM_TYPE_QUANTITATIF);
                 iNombreDisjonctions = regle.m_iNombreDisjonctionsGaucheValides;
             }
             else {
-                iNombreItems = regle.m_iNombreItemsDroite;
-                tItemsRegle = regle.m_tItemsDroite;
+                iNombreItems = regle.getRightItems().size();
+                tItemsRegle = regle.getRightItems();
                 iNombreItemsQuantitatifs = regle.CompterItemsDroiteSelonType(Item.ITEM_TYPE_QUANTITATIF);
                 iNombreDisjonctions = regle.m_iNombreDisjonctionsDroiteValides;
             }
@@ -333,7 +336,7 @@ public class RuleBrowser extends javax.swing.JPanel { //step 5 the third panel
                     fHauteurHautAccolade = fHauteurCumulee;
                     for (iIndiceItem = 0; iIndiceItem < iNombreItems; iIndiceItem++) {
 
-                        item = tItemsRegle[iIndiceItem];
+                        item = tItemsRegle.get(iIndiceItem);
                         if (item.m_iTypeItem == Item.ITEM_TYPE_QUANTITATIF) {
 
                             itemQuant = (ItemQuantitative)item;

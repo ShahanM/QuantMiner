@@ -182,7 +182,7 @@ public class PanelPreExtraction extends DatabasePanelAssistant {
             DataColumn colonneDonnees = gestionnaireBD.ObtenirColonneBDPriseEnCompte(iIndiceColonne);
             if (colonneDonnees != null) {
                 
-                sNomColonne = new String( colonneDonnees.m_sNomColonne );
+                sNomColonne = colonneDonnees.m_sNomColonne;
                 if (colonneDonnees.m_iTypeValeurs == DatabaseAdmin.TYPE_VALEURS_COLONNE_REEL) {
                     
                     sDescriptionElement =

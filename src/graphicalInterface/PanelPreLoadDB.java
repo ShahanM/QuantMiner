@@ -194,7 +194,7 @@ public class PanelPreLoadDB extends DatabasePanelAssistant {//step 1
             sNomColonne = m_gestionnaireBD.ObtenirNomColonneBDInitiale(iIndiceColonne); //Set column name
             
             //Attribute name
-            ligneDonnees[0] = new String(sNomColonne);
+            ligneDonnees[0] = sNomColonne;
             
             //Attribute type
             if (m_gestionnaireBD.ObtenirTypeColonne(sNomColonne) == DatabaseAdmin.TYPE_VALEURS_COLONNE_REEL) //Set column type
@@ -205,7 +205,7 @@ public class PanelPreLoadDB extends DatabasePanelAssistant {//step 1
            //Consider
            //consider this column or not, during initialization, it is true, we set all as selected
            //due to the call of PrendreEnCompteToutesLesColonnes() in FenetrePrincipale
-            ligneDonnees[2] = new Boolean( m_gestionnaireBD.EstPriseEnCompteColonne(sNomColonne) ); 
+            ligneDonnees[2] = Boolean.valueOf(m_gestionnaireBD.EstPriseEnCompteColonne(sNomColonne));
             
             tableModel.addRow( ligneDonnees );
         }

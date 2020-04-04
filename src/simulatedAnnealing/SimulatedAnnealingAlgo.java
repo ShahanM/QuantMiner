@@ -53,7 +53,7 @@ public class SimulatedAnnealingAlgo extends EvaluationBaseAlgorithm {
         
         // M�morisation de la solution courante :
         for (iIndiceReglePotentielle=0; iIndiceReglePotentielle<m_iNombreReglesPotentielles; iIndiceReglePotentielle++) {
-            m_tReglesPotentiellesPrecedentes[iIndiceReglePotentielle] = new ReglePotentielle(m_iDimension, m_iNombreTotalIntervalles);
+            m_tReglesPotentiellesPrecedentes[iIndiceReglePotentielle] =new ReglePotentielle(m_iDimension, m_iNombreTotalIntervalles);
             m_tReglesPotentiellesPrecedentes[iIndiceReglePotentielle].Copier( m_tReglesPotentielles[iIndiceReglePotentielle] ); 
         }
         

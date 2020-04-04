@@ -19,8 +19,7 @@ public class ItemQuantitative extends Item {
     public AttributQuantitative m_attributQuant = null;   // Attribut de la BD dont est issu l'item
     public int m_iNombreDisjonctions = 0;
     public float [] m_tBornes = null; // Les bornes min et max, stock�es successivement 2 � 2 (chaque paire correspond � un intervalle afin de pouvoir autoriser les unions)
-     
-    
+
     /**
      * Creating Multi Item Quantitative Intervals
      * @param attributQuant Quantitative attributes
@@ -46,17 +45,13 @@ public class ItemQuantitative extends Item {
         for (iIndiceDisjonction=0; iIndiceDisjonction<(m_iNombreDisjonctions*2); iIndiceDisjonction++)
             m_tBornes[iIndiceDisjonction] = tBornes[iIndiceDisjonction];
     }
-        
-    
-    
+
     public ItemQuantitative(AttributQuantitative attributQuant, float [] tBornes) {
         super();
         
         CreerItemQuantitatifMultiIntervalles(attributQuant, tBornes);
     } 
-    
-    
-    
+
     /**
      * Simple constructor that puts all the intervals, the number required [0,0]:
      * @param attributQuant Quantitative attribute
@@ -76,9 +71,7 @@ public class ItemQuantitative extends Item {
                 tBornes[iIndiceBorne] = 0.0f;
             CreerItemQuantitatifMultiIntervalles(attributQuant, tBornes);
         }
-    } 
-
-    
+    }
     
     /**
      * Constructor plus simple pour attribuer un intervalle unique :
@@ -97,9 +90,7 @@ public class ItemQuantitative extends Item {
         m_tBornes = new float [2];
         m_tBornes[0] = fBorneMin;
         m_tBornes[1] = fBorneMax;
-    } 
-    
-    
+    }
     
     // Constructeur de copie :
     public ItemQuantitative(ItemQuantitative item) {
@@ -107,8 +98,7 @@ public class ItemQuantitative extends Item {
         
         CopierItemQuantitatif(item);
     }
-    
-    
+
 
     public void CopierItemQuantitatif(ItemQuantitative item) {
         int iIndiceDisjonction = 0;
@@ -126,8 +116,7 @@ public class ItemQuantitative extends Item {
         for (iIndiceDisjonction=0; iIndiceDisjonction<(this.m_iNombreDisjonctions*2); iIndiceDisjonction++)
             this.m_tBornes[iIndiceDisjonction] = item.m_tBornes[iIndiceDisjonction];
     }
-    
-    
+
     //obtain the min value of the iIndiceDisjonction disjunct
     public float ObtenirBorneMinIntervalle(int iIndiceDisjonction) {
         if (iIndiceDisjonction < m_iNombreDisjonctions)
@@ -162,8 +151,7 @@ public class ItemQuantitative extends Item {
          
          return element;         
     }
-    
-    
+
     //return something like ALTITUDE in [1814.0; 4926.0]
     public String toString(int iIndiceDisjonction) {
         String sItem = null;
@@ -187,5 +175,28 @@ public class ItemQuantitative extends Item {
         
         return sItem;       
     }
- 
+
+    public String toString() {
+        String sItem;
+        String sNomItem;
+
+        if (m_attributQuant==null)
+            return "Item nul";
+
+        sNomItem = m_attributQuant.ObtenirNom();
+        if (sNomItem != null)
+            sNomItem = sNomItem.trim();
+
+        sItem = sNomItem;
+        sItem += " in ";
+
+        sItem += "[";
+        sItem += String.valueOf(m_tBornes[0]);   //min
+        sItem += "; ";
+        sItem += String.valueOf(m_tBornes[1]); //max
+        sItem += "]";
+
+        return sItem;
+    }
+
 }

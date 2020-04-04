@@ -20,16 +20,11 @@ package src;
  *           Daniel Cassard (BRGM, France)
  */
 
-import java.sql.*;
+import src.graphicalInterface.JSplashWindow;
+import src.graphicalInterface.MainWindow;
+import src.tools.ENV;
+
 import javax.swing.*;
-
-import src.apriori.*;
-import src.geneticAlgorithm.*;
-import src.graphicalInterface.*;
-import src.tools.*;
-
-import java.util.*;
-import java.io.*;
 
 public class QuantMiner {
     
@@ -42,16 +37,20 @@ public class QuantMiner {
         if (ENV.LOOK_INTERFACE == ENV.LOOK_INTERFACE_OS) {
             try {
                 UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-            } catch(Exception e) {}
+            } catch(Exception e) {
+                e.printStackTrace();
+            }
         } else {
             try {
                 UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
-            } catch(Exception e) {}
+            } catch(Exception e) {
+                e.printStackTrace();
+            }
         }
         
         JSplashWindow splash = new JSplashWindow(2000, ENV.REPERTOIRE_RESSOURCES);
         splash.showSplash();
-        new MainWindow().show();
+        new MainWindow().setVisible(true);
         
         //Register file parameters
         ENV.EnregistrerFichierParametrage();

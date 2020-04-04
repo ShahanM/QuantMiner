@@ -54,7 +54,7 @@ public class ENV {
         
         repertoireCourant = new File("");
         try {
-            REPERTOIRE_TRAVAIL = new String( repertoireCourant.getAbsolutePath() );
+            REPERTOIRE_TRAVAIL = repertoireCourant.getAbsolutePath();
             while (REPERTOIRE_TRAVAIL.endsWith(".")) {
                 REPERTOIRE_TRAVAIL = REPERTOIRE_TRAVAIL.substring(0, (REPERTOIRE_TRAVAIL.length()-1));
             }            

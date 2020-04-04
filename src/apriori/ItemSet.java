@@ -105,34 +105,34 @@ public class ItemSet {
      */
     public String EcrireItemSet(int iNombreTransactions, boolean bAfficherSuppport) {
         
-        String sTexteItemSet = null;
+        StringBuilder sTexteItemSet =null;
         String sTexteItem = null;
         int iIndiceItem = 0;
         ItemQualitative item = null;
         
-        sTexteItemSet = "{ ";
+        sTexteItemSet=new StringBuilder("{ ");
         
         for (iIndiceItem=0;iIndiceItem<m_iTaille;iIndiceItem++) {
             item = m_listeItems[iIndiceItem];
             
             if (item!=null) {
-                if (iIndiceItem>0) sTexteItemSet += ", ";
+                if (iIndiceItem>0) sTexteItemSet.append(", ");
                 
-                sTexteItemSet += item.toString();
+                sTexteItemSet.append(item.toString());
             }
         }
 
-        sTexteItemSet += " }";
+        sTexteItemSet.append(" }");
         
         if (bAfficherSuppport) {
-            sTexteItemSet += "  ,  support = ";
-            sTexteItemSet += String.valueOf( m_iSupport );
-            sTexteItemSet += " (";
-            sTexteItemSet += String.valueOf( (float)(100.0f*((float)m_iSupport / (float)iNombreTransactions)) );
-            sTexteItemSet += "%)";
+            sTexteItemSet.append("  ,  support = ");
+            sTexteItemSet.append(String.valueOf(m_iSupport));
+            sTexteItemSet.append(" (");
+            sTexteItemSet.append(String.valueOf((float) (100.0f * ((float) m_iSupport / (float) iNombreTransactions))));
+            sTexteItemSet.append("%)");
         }
         
-        return sTexteItemSet;
+        return sTexteItemSet.toString();
     }
     
        

@@ -33,7 +33,7 @@ public class DialogChoiceFileRecords extends javax.swing.JDialog { //save result
     
    
     
-    public class DialogChoixEnregistrementFichier_Donnees {
+    public static class DialogChoixEnregistrementFichier_Donnees {
         public int m_iTypeEnregistrement = 0;
         public String m_sNomUtilisateur = null;
         public String m_sDescriptionRegles = null;
@@ -56,7 +56,7 @@ public class DialogChoiceFileRecords extends javax.swing.JDialog { //save result
         
         m_contexteResolution = contexteResolution;
         
-        m_donnees = new DialogChoixEnregistrementFichier_Donnees();
+        m_donnees =new DialogChoixEnregistrementFichier_Donnees();
         m_donnees.m_sNomUtilisateur = m_contexteResolution.m_sNomUtilisateur;
         m_donnees.m_sDescriptionRegles = m_contexteResolution.m_sDescriptionRegles;
             

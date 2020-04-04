@@ -28,7 +28,7 @@ public class FiltreChoiceFiles extends FileFilter {//filefilter means what kind 
     public FiltreChoiceFiles(String sDescription) {//e.g. sDescription = "File DBase 4"
  	m_listeExtensions = new ArrayList();
         if(sDescription!=null)
-            m_sDescription = new String(sDescription);
+            m_sDescription = sDescription;
     }
 
     
@@ -90,7 +90,7 @@ public class FiltreChoiceFiles extends FileFilter {//filefilter means what kind 
 
     // Fontion abstraite surcharg�e :
     public String getDescription() {
-	String sDescriptionComplete = null;
+	StringBuilder sDescriptionComplete =null;
         int iNombreExtensions = 0;
         int iIndiceExtension = 0;
         
@@ -99,14 +99,14 @@ public class FiltreChoiceFiles extends FileFilter {//filefilter means what kind 
         if (iNombreExtensions==0) return "";
         
         if (m_sDescription != null)
-            sDescriptionComplete = m_sDescription + " (";
+            sDescriptionComplete = new StringBuilder(m_sDescription + " (");
         else
-            sDescriptionComplete = new String("(");
+            sDescriptionComplete = new StringBuilder("(");
         
-        sDescriptionComplete += "." + (String)m_listeExtensions.get(0);
+        sDescriptionComplete.append(".").append((String) m_listeExtensions.get(0));
         
         for (iIndiceExtension=1;iIndiceExtension<iNombreExtensions;iIndiceExtension++)
-            sDescriptionComplete += ", ." + (String)m_listeExtensions.get(iIndiceExtension);
+            sDescriptionComplete.append(", .").append((String) m_listeExtensions.get(iIndiceExtension));
 
 	return sDescriptionComplete + ")";
     }

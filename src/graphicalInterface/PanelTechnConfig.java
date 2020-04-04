@@ -86,7 +86,6 @@ public class PanelTechnConfig extends DatabasePanelAssistant { //step 3 paramete
                 break;
                 
             default :
-                return;
         }
 
     }

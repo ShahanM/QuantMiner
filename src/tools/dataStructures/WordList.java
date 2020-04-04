@@ -20,7 +20,7 @@ import java.util.*;
 public class WordList {
 
     
-    public class InfosMot {
+    public static class InfosMot {
         
         public int m_iIdentifiantUnique;   // Num�ro identifiant le mot parmi all ceux de la liste
         public int m_iOccurrences;         // Nombre de fois o� on a ins�r� le mot dans la liste
@@ -81,7 +81,7 @@ public class WordList {
         
         // Cas o� elle n'est pas r�pertoiri�e, dans ce cas on l'ajoute :
         else {
-            infosMot = new InfosMot(m_iNombreMots);
+            infosMot =new InfosMot(m_iNombreMots);
             m_tableMots.put(sChaine, infosMot);
             iIdentificateurChaine = m_iNombreMots;   //Position in Chain 
             m_iNombreMots++;                         //number of words increase by one

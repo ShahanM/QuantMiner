@@ -109,7 +109,6 @@ public class AprioriQuantitative {
             }
              
         }
-        
 
         iNombreAttributsQual = m_listeAttributsQual.size();
         iIndiceAttributQual = 0;
@@ -263,7 +262,7 @@ public class AprioriQuantitative {
     
     /**Write Frequents List*/
     public String EcrireListeFrequents() {
-        String sTexteListeFrequents = null;
+        StringBuilder sTexteListeFrequents =null;
         int iTailleMaxItemSets = 0;
         int iIndiceListesItemSets = 0;
         int iNombreItemSets = 0;
@@ -271,7 +270,7 @@ public class AprioriQuantitative {
         ArrayList listeItemSets = null;
         ItemSet itemset = null;
         
-        sTexteListeFrequents = "";
+        sTexteListeFrequents=new StringBuilder();
         
         iTailleMaxItemSets = m_listeListeItemSets.size();
         
@@ -284,17 +283,17 @@ public class AprioriQuantitative {
                 itemset = (ItemSet)listeItemSets.get(iIndiceItemSet);
                 
                 if ( itemset.m_iSupport >= (int)(m_fMinSupp*(float)m_iNombreTransactions) ) {
-                    sTexteListeFrequents += itemset.EcrireItemSet(m_iNombreTransactions, true);
-                    sTexteListeFrequents += "\n";
+                    sTexteListeFrequents.append(itemset.EcrireItemSet(m_iNombreTransactions, true));
+                    sTexteListeFrequents.append("\n");
                 }
                 
             }
             
             if (iNombreItemSets > 0)
-                sTexteListeFrequents += "\n";            
+                sTexteListeFrequents.append("\n");
         }
         
-        return sTexteListeFrequents;
+        return sTexteListeFrequents.toString();
     }
     
     
@@ -569,7 +568,7 @@ public class AprioriQuantitative {
     * Search through the list of the frquents itemset containing items in passs paramtre
     * @param items An array of Qualitative item
     */
-    public ItemSet RechercherFrequent(ItemQualitative [] items) {
+    public ItemSet RechercherFrequent(List<ItemQualitative> items) {
         int iTailleFrequent = 0;
         int iDimensionMax = 0;
         ArrayList listeItemSets = null;
@@ -582,7 +581,7 @@ public class AprioriQuantitative {
         boolean bItemTrouveDansItemSet = false;
         int iIndiceItemDansItemSet = 0;        
         
-        iTailleFrequent = items.length;
+        iTailleFrequent = items.size();
         iDimensionMax = m_listeListeItemSets.size();
         if ( (iTailleFrequent<=0) || (iTailleFrequent>iDimensionMax) )
             return null;
@@ -600,7 +599,7 @@ public class AprioriQuantitative {
             iIndiceItem = 0;
             bItemSetTrouve = true;
             while ( (bItemSetTrouve) && (iIndiceItem<iTailleFrequent) ) {
-                item = items[iIndiceItem];
+                item = items.get(iIndiceItem);
                 
                 // On recherche la pr�sence de l'item dans l'itemset :
                 bItemTrouveDansItemSet = false;

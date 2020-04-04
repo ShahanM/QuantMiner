@@ -13,31 +13,25 @@
  */
 package src.database;
 
-import java.sql.*;
-import java.util.*;
-import java.io.*;
-
+import java.io.File;
+import java.util.Arrays;
 
 public class DatabaseAdmin {
 
     // Constante choisie dans le domaine couvert par le type float pour indiquer une valeur manquante
     public static final float VALEUR_MANQUANTE_FLOAT = -(Float.MAX_VALUE / 2.0f);
-    
-    
-    
+
     // Classe d�finissant une colonne de donn�es qui devra �tre charg�e en m�moire :
-    class DescripteurColonnePriseEnCompte {
+    static class DescripteurColonnePriseEnCompte {
         
-        public boolean m_bPrendreEnCompte = false;
-        public int m_iTypeColonne = 0;      
+        boolean m_bPrendreEnCompte;
+        int m_iTypeColonne;
         
-        DescripteurColonnePriseEnCompte(int iTypeColonne, boolean bPrendreEnCompte) 
-        {
+        DescripteurColonnePriseEnCompte(int iTypeColonne, boolean bPrendreEnCompte) {
             m_iTypeColonne = iTypeColonne;
             m_bPrendreEnCompte = bPrendreEnCompte;
         }
     }
-    
    
     public CsvFileParser csvParser = null;
     String [] m_tNomsColonnes = null;
@@ -58,9 +52,7 @@ public class DatabaseAdmin {
     public static final int SOURCE_FICHIER_DBF = 1;
     public static final int SOURCE_FLUX_ODBC = 2;
     public static final int SOURCE_FICHIER_CSV = 3;
-    
-    
-    
+
     private void InitialiserGestionnaireBaseDeDonnees() {
         
         m_tNomsColonnes = null;    //name of columns
@@ -74,9 +66,7 @@ public class DatabaseAdmin {
         m_colonnesPrisesEnCompte = null; //descriptor of column, e.g if selected, column type...
         
     }
-    
-    
-    
+
     public DatabaseAdmin(String sCheminFichier, String extension) {
        if (extension.equals("dbf"))
     	   GestionnaireBaseDeDonneesDBF(sCheminFichier);
@@ -103,7 +93,7 @@ public class DatabaseAdmin {
             m_sNomBaseDeDonnees = sCheminFichier;
         else
             try {
-                m_sNomBaseDeDonnees = sCheminFichier.substring(iDernierePositionSeparateur+1, sCheminFichier.length() );
+                m_sNomBaseDeDonnees = sCheminFichier.substring(iDernierePositionSeparateur+1);
             }
             catch (IndexOutOfBoundsException e) { m_sNomBaseDeDonnees = null; }
         
@@ -149,7 +139,7 @@ public class DatabaseAdmin {
                 else
                     m_tNomsColonnes[iIndiceColonne] = null;
                 //At present, all columns are not selected,and by default, we suppose they are item type
-                m_colonnesPrisesEnCompte[iIndiceColonne] = new DescripteurColonnePriseEnCompte(TYPE_VALEURS_COLONNE_ITEM, false);
+                m_colonnesPrisesEnCompte[iIndiceColonne] =new DescripteurColonnePriseEnCompte(TYPE_VALEURS_COLONNE_ITEM, false);
             }
 
             Arrays.sort(m_tNomsColonnes);
@@ -161,8 +151,8 @@ public class DatabaseAdmin {
 
     public void GestionnaireBaseDeDonneesCSV(String sCheminFichier){
     	csvParser = null;
-        int iIndiceColonne = 0;
-        int iDernierePositionSeparateur = 0;
+        int iIndiceColonne;
+        int iDernierePositionSeparateur;
         
         InitialiserGestionnaireBaseDeDonnees();
         
@@ -176,7 +166,7 @@ public class DatabaseAdmin {
             m_sNomBaseDeDonnees = sCheminFichier;
         else
             try {
-                m_sNomBaseDeDonnees = sCheminFichier.substring(iDernierePositionSeparateur+1, sCheminFichier.length() );
+                m_sNomBaseDeDonnees = sCheminFichier.substring(iDernierePositionSeparateur+1);
             }
             catch (IndexOutOfBoundsException e) { m_sNomBaseDeDonnees = null; }
         
@@ -188,13 +178,12 @@ public class DatabaseAdmin {
         try {
     		//This function gets information, i.e. number of fields, name. It also gets number of records/rows
     		//This function read each row's value to data
-        	csvParser = new CsvFileParser( m_sNomFichier ); 
+        	csvParser = new CsvFileParser( m_sNomFichier );
+        	System.out.println("CSV PARSED");
         }
         catch (Exception e) {
-        	
-        	csvParser = null;
-            System.out.println(e);
-            
+        	csvParser.close();
+        	e.printStackTrace();
         }
         
         if (csvParser == null) {
@@ -218,7 +207,7 @@ public class DatabaseAdmin {
             m_tNomsColonnes[iIndiceColonne] = csvParser.ObtenirNomChamps()[iIndiceColonne];
            
                 //At present, all columns are not selected,and by default, we suppose they are item type
-            m_colonnesPrisesEnCompte[iIndiceColonne] = new DescripteurColonnePriseEnCompte(TYPE_VALEURS_COLONNE_ITEM, false);
+            m_colonnesPrisesEnCompte[iIndiceColonne] =new DescripteurColonnePriseEnCompte(TYPE_VALEURS_COLONNE_ITEM, false);
             }
             Arrays.sort(m_tNomsColonnes);
         }
@@ -226,7 +215,7 @@ public class DatabaseAdmin {
         
         csvParser.close();
       
-}
+    }
     
     public boolean EstBaseDeDonneesValide() {
         return ( m_sNomBaseDeDonnees != null );
@@ -312,7 +301,7 @@ public class DatabaseAdmin {
                     // value ne le contradict pas; sinon il devient quantitatif :
                     if (tTypesChamps[iIndiceColonne] == TYPE_VALEURS_COLONNE_REEL) {
                         if (sValeurItem != null)
-                            if (sValeurItem.trim() != "") { //Returns a copy of the string, with leading and trailing whitespace omitted.
+                            if (!sValeurItem.trim().isEmpty()) { //Returns a copy of the string, with leading and trailing whitespace omitted.
                                 try {
                                     Float.parseFloat(sValeurItem); //Throws: if the string does not contain a parsable float
                                 }
@@ -321,11 +310,8 @@ public class DatabaseAdmin {
                                 }
                             }
                     }
-                    
                 }
-              
             }
-
             iIndiceLigne++;
             if (iIndiceLigne == m_iNombreLignes - 1) break;
             tValeursChamps = csvParser.m_data[iIndiceLigne];
@@ -575,8 +561,7 @@ public class DatabaseAdmin {
         	ChargerDonneesPrisesEnCompteDBF();
         else if (m_iTypeSource == SOURCE_FICHIER_CSV)
         	ChargerDonneesPrisesEnCompteCSV();
-        else return;
-        
+
     }
     
     
@@ -788,26 +773,26 @@ public class DatabaseAdmin {
     public String EcrireDescriptifColonnesQuantitatives() {
         int iIndiceColonne = 0;
         DescripteurColonnePriseEnCompte colonnePriseEnCompte = null;
-        String sTexteDescriptif = null;
+        StringBuilder sTexteDescriptif =null;
 
         if (m_tDonneesColonnes == null)
             return "No column selected.";
         
-        sTexteDescriptif = new String("");
+        sTexteDescriptif=new StringBuilder();
         
-        sTexteDescriptif += "ATTRIBUTS QUANTITATIFS :\n\n";
+        sTexteDescriptif.append("ATTRIBUTS QUANTITATIFS :\n\n");
         for (iIndiceColonne=0;iIndiceColonne<m_tDonneesColonnes.length;iIndiceColonne++) {
             if (m_tDonneesColonnes[iIndiceColonne].m_iTypeValeurs == TYPE_VALEURS_COLONNE_REEL) {
-                sTexteDescriptif += m_tDonneesColonnes[iIndiceColonne].m_sNomColonne;
-                sTexteDescriptif += ", domaine [ ";
-                sTexteDescriptif += String.valueOf( m_tDonneesColonnes[iIndiceColonne].ObtenirBorneMin() );
-                sTexteDescriptif += ", ";
-                sTexteDescriptif += String.valueOf( m_tDonneesColonnes[iIndiceColonne].ObtenirBorneMax() );
-                sTexteDescriptif += " ]\n";
+                sTexteDescriptif.append(m_tDonneesColonnes[iIndiceColonne].m_sNomColonne);
+                sTexteDescriptif.append(", domaine [ ");
+                sTexteDescriptif.append(String.valueOf(m_tDonneesColonnes[iIndiceColonne].ObtenirBorneMin()));
+                sTexteDescriptif.append(", ");
+                sTexteDescriptif.append(String.valueOf(m_tDonneesColonnes[iIndiceColonne].ObtenirBorneMax()));
+                sTexteDescriptif.append(" ]\n");
             }
         }            
     
-        return sTexteDescriptif;
+        return sTexteDescriptif.toString();
     }
 
     

@@ -87,7 +87,7 @@ public class ResolutionContext {
     public MainWindow m_fenetreProprietaire = null;  // Fenetre conteneur de l'application -- windows containing the application
     public DatabaseAdmin m_gestionnaireBD = null;  // Acces a la base de donnees en cours -- access the database in use
     public int m_iTechniqueResolution = 0;  // Identifiant de la technique d'extraction des regles quantitatives -- identifier of the extraction technique
-    public ArrayList<AssociationRule> m_listeRegles = null;  // Liste des dernieres regles optimales calculees -- list of the last optimal rules calculated
+    public List<AssociationRule> m_listeRegles;  // Liste des dernieres regles optimales calculees -- list of the last optimal rules calculated
     
     
     // Objects definissant les parametres utilisateur pour chaque technique d'extraction : object defininf user parameter for each extraction technique
@@ -164,17 +164,17 @@ public class ResolutionContext {
     public PositionRuleParameters ObtenirInfosPostionnementFiltrage() { return m_filtrageRegles; }
     
     public String ObtenirInfosContexte(boolean bAjouterTagsHTML) {
-        String sInfoContexte = null;
+        StringBuilder sInfoContexte =null;
         int iNombreColonnesPrisesEnCompte = 0;
         int iIndiceColonne = 0;
         DataColumn colonne = null;
         AttributQualitative attributQual = null;
         AttributQuantitative attributQuant = null;
         
-        sInfoContexte = "";
+        sInfoContexte=new StringBuilder();
         
         if ( (m_aprioriCourant == null) || (m_gestionnaireBD == null) )
-            return sInfoContexte;
+            return sInfoContexte.toString();
         
         // Si les regles proviennent d'un fichier, on renvoie le contexte original :
         // If the rules come from a file, we send the general context:
@@ -182,54 +182,54 @@ public class ResolutionContext {
             return m_parametresTechChargement.toString();
         
         
-        if (bAjouterTagsHTML) sInfoContexte += "<a name=\"conftech\"><big><u><b>";
-        sInfoContexte += "Parameters :";
-        if (bAjouterTagsHTML) sInfoContexte += "</b></u></big></a>";
-        sInfoContexte += "\n\n\n";
+        if (bAjouterTagsHTML) sInfoContexte.append("<a name=\"conftech\"><big><u><b>");
+        sInfoContexte.append("Parameters :");
+        if (bAjouterTagsHTML) sInfoContexte.append("</b></u></big></a>");
+        sInfoContexte.append("\n\n\n");
         
         // Recapitulation des parametres :
         // summarization of the parameters:
-        if (bAjouterTagsHTML) sInfoContexte += "<i>";
-        sInfoContexte += "Method : ";
-        if (bAjouterTagsHTML) sInfoContexte += "</i><b>";
+        if (bAjouterTagsHTML) sInfoContexte.append("<i>");
+        sInfoContexte.append("Method : ");
+        if (bAjouterTagsHTML) sInfoContexte.append("</i><b>");
         
         switch (m_iTechniqueResolution) {
             case TECHNIQUE_APRIORI_QUAL :
-                sInfoContexte += "Apriori algorithm (categorical)\n\n\n";
-                if (bAjouterTagsHTML) sInfoContexte += "</b>";
-                sInfoContexte += m_parametresRegles.toString() + "\n\n";
+                sInfoContexte.append("Apriori algorithm (categorical)\n\n\n");
+                if (bAjouterTagsHTML) sInfoContexte.append("</b>");
+                sInfoContexte.append(m_parametresRegles.toString()).append("\n\n");
                 break;
                 
             case TECHNIQUE_ALGO_GENETIQUE :
-                sInfoContexte += "genetic algorithm\n\n\n";
-                if (bAjouterTagsHTML) sInfoContexte += "</b>";
-                sInfoContexte += m_parametresReglesQuantitatives.toString() + "\n\n";
-                sInfoContexte += m_parametresTechAlgoGenetique.toString() + "\n\n";
+                sInfoContexte.append("genetic algorithm\n\n\n");
+                if (bAjouterTagsHTML) sInfoContexte.append("</b>");
+                sInfoContexte.append(m_parametresReglesQuantitatives.toString()).append("\n\n");
+                sInfoContexte.append(m_parametresTechAlgoGenetique.toString()).append("\n\n");
                 break;
                 
             case TECHNIQUE_RECUIT_SIMULE :
-                sInfoContexte += "simulated annealing\n\n\n";
-                if (bAjouterTagsHTML) sInfoContexte += "</b>";
-                sInfoContexte += m_parametresReglesQuantitatives.toString() + "\n\n";
-                sInfoContexte += m_parametresTechRecuitSimule.toString() + "\n\n";
+                sInfoContexte.append("simulated annealing\n\n\n");
+                if (bAjouterTagsHTML) sInfoContexte.append("</b>");
+                sInfoContexte.append(m_parametresReglesQuantitatives.toString()).append("\n\n");
+                sInfoContexte.append(m_parametresTechRecuitSimule.toString()).append("\n\n");
                 break;
                 
             default:
-                if (bAjouterTagsHTML) sInfoContexte += "</b>";
+                if (bAjouterTagsHTML) sInfoContexte.append("</b>");
         }
-        sInfoContexte += "\n\n\n";
+        sInfoContexte.append("\n\n\n");
         
-        if (bAjouterTagsHTML) sInfoContexte += "<a name=\"recapattr\"><big><u><b>";
-        sInfoContexte += "Summary of the attributes used in mining rules:";
-        if (bAjouterTagsHTML) sInfoContexte += "</b></u></big></a>";
-        sInfoContexte += "\n\n\n";
+        if (bAjouterTagsHTML) sInfoContexte.append("<a name=\"recapattr\"><big><u><b>");
+        sInfoContexte.append("Summary of the attributes used in mining rules:");
+        if (bAjouterTagsHTML) sInfoContexte.append("</b></u></big></a>");
+        sInfoContexte.append("\n\n\n");
         
         iNombreColonnesPrisesEnCompte = m_gestionnaireBD.ObtenirNombreColonnesPrisesEnCompte();
         
-        if (bAjouterTagsHTML) sInfoContexte += "<b>";
-        sInfoContexte += "Qualitative attributes :";
-        if (bAjouterTagsHTML) sInfoContexte += "</b>";
-        sInfoContexte += "\n\n";
+        if (bAjouterTagsHTML) sInfoContexte.append("<b>");
+        sInfoContexte.append("Qualitative attributes :");
+        if (bAjouterTagsHTML) sInfoContexte.append("</b>");
+        sInfoContexte.append("\n\n");
         
         for (iIndiceColonne=0; iIndiceColonne<iNombreColonnesPrisesEnCompte; iIndiceColonne++) {
             colonne = m_gestionnaireBD.ObtenirColonneBDPriseEnCompte(iIndiceColonne);
@@ -238,19 +238,19 @@ public class ResolutionContext {
                 if (m_positionnementRegles.ObtenirTypePrisEnCompteAttribut(colonne.m_sNomColonne) != PRISE_EN_COMPTE_ITEM_NULLE_PART) {
                     attributQual = m_aprioriCourant.ObtenirAttributQualitatifDepuisNom(colonne.m_sNomColonne);
                     if (attributQual != null)
-                        sInfoContexte += attributQual.ObtenirNom() + ", ";
-                    sInfoContexte += String.valueOf(attributQual.m_colonneDonnees.ObtenirNombreValeursDifferentes()) + " values.\n";
+                        sInfoContexte.append(attributQual.ObtenirNom()).append(", ");
+                    sInfoContexte.append(String.valueOf(attributQual.m_colonneDonnees.ObtenirNombreValeursDifferentes())).append(" values.\n");
                 }
                 }
         }
-        sInfoContexte += "\n\n";
+        sInfoContexte.append("\n\n");
         
         
         if (m_iTechniqueResolution != TECHNIQUE_APRIORI_QUAL) {
-            if (bAjouterTagsHTML) sInfoContexte += "<b>";
-            sInfoContexte += "Quantitative attributes:";
-            if (bAjouterTagsHTML) sInfoContexte += "</b>";
-            sInfoContexte += "\n\n";
+            if (bAjouterTagsHTML) sInfoContexte.append("<b>");
+            sInfoContexte.append("Quantitative attributes:");
+            if (bAjouterTagsHTML) sInfoContexte.append("</b>");
+            sInfoContexte.append("\n\n");
             
             for (iIndiceColonne=0; iIndiceColonne<iNombreColonnesPrisesEnCompte; iIndiceColonne++) {
                 colonne = m_gestionnaireBD.ObtenirColonneBDPriseEnCompte(iIndiceColonne);
@@ -259,30 +259,30 @@ public class ResolutionContext {
                     if (m_positionnementRegles.ObtenirTypePrisEnCompteAttribut(colonne.m_sNomColonne) != PRISE_EN_COMPTE_ITEM_NULLE_PART) {
                         attributQuant = m_aprioriCourant.ObtenirAttributQuantitatifDepuisNom(colonne.m_sNomColonne);
                         if (attributQuant != null)
-                            sInfoContexte += attributQuant.ObtenirNom() + ", domain ";
-                        sInfoContexte += "[ " + String.valueOf( colonne.ObtenirBorneMin() );
-                        sInfoContexte +=  ", " + String.valueOf( colonne.ObtenirBorneMax() ) + "].\n";
+                            sInfoContexte.append(attributQuant.ObtenirNom()).append(", domain ");
+                        sInfoContexte.append("[ ").append(String.valueOf(colonne.ObtenirBorneMin()));
+                        sInfoContexte.append(", ").append(String.valueOf(colonne.ObtenirBorneMax())).append("].\n");
                     }
                     }
             }
-            sInfoContexte += "\n\n";
+            sInfoContexte.append("\n\n");
             
         }
-        sInfoContexte += "\n\n\n";
+        sInfoContexte.append("\n\n\n");
         
         
-        if (bAjouterTagsHTML) sInfoContexte += "<a name=\"lstfreq\"><big><u><b>";
-        sInfoContexte += "Frequent itemsets:";
-        if (bAjouterTagsHTML) sInfoContexte += "</b></u></big></a>";
-        sInfoContexte += "\n\n\n";
+        if (bAjouterTagsHTML) sInfoContexte.append("<a name=\"lstfreq\"><big><u><b>");
+        sInfoContexte.append("Frequent itemsets:");
+        if (bAjouterTagsHTML) sInfoContexte.append("</b></u></big></a>");
+        sInfoContexte.append("\n\n\n");
         
-        sInfoContexte += m_aprioriCourant.EcrireListeFrequents();
-        sInfoContexte += "\n\n\n\n\n";
+        sInfoContexte.append(m_aprioriCourant.EcrireListeFrequents());
+        sInfoContexte.append("\n\n\n\n\n");
         
         if (bAjouterTagsHTML)
-            sInfoContexte = FormateHTML(sInfoContexte);
+            sInfoContexte=new StringBuilder(FormateHTML(sInfoContexte.toString()));
         
-        return sInfoContexte;
+        return sInfoContexte.toString();
     }
     
     
@@ -591,7 +591,7 @@ public class ResolutionContext {
                     colonneDonnees = m_gestionnaireBD.ObtenirColonneBDPriseEnCompte(iIndiceAttribut);
                     if (colonneDonnees != null) {
                         
-                        sNomAttribut = new String( colonneDonnees.m_sNomColonne );
+                        sNomAttribut = colonneDonnees.m_sNomColonne;
                         
                         fluxFichier.writeUTF(sNomAttribut); 
                         
@@ -1071,8 +1071,8 @@ public class ResolutionContext {
             try {
                 
                 // Informations sur la structure de la r�gle : information about the rule structure
-                fluxFichier.writeInt( regle.m_iNombreItemsGauche );
-                fluxFichier.writeInt( regle.m_iNombreItemsDroite );
+                fluxFichier.writeInt( regle.getLeftItems().size() );
+                fluxFichier.writeInt( regle.getRightItems().size() );
                 fluxFichier.writeInt( regle.m_iNombreDisjonctionsGaucheValides );
                 fluxFichier.writeInt( regle.m_iNombreDisjonctionsDroiteValides );
                 
@@ -1090,10 +1090,10 @@ public class ResolutionContext {
                 for (iEtapeTestRegle=0; iEtapeTestRegle<2; iEtapeTestRegle++) {
                     
                     if (iEtapeTestRegle==0) {
-                        iNombreItems = regle.m_iNombreItemsGauche;
+                        iNombreItems = regle.getLeftItems().size();
                         iNombreDisjonctions = regle.m_iNombreDisjonctionsGaucheValides;
                     } else {
-                        iNombreItems = regle.m_iNombreItemsDroite;
+                        iNombreItems = regle.getRightItems().size();
                         iNombreDisjonctions = regle.m_iNombreDisjonctionsDroiteValides;
                     }
                     
@@ -1446,9 +1446,9 @@ public class ResolutionContext {
                             bRegleValide = false;
                         else {
                             if (iEtapeTestRegle==0)
-                                regle.AssignerItemGauche(item, iIndiceAjoutItem);
+                                regle.AssignerItemGauche(item);
                             else
-                                regle.AssignerItemDroite(item, iIndiceAjoutItem);
+                                regle.AssignerItemDroite(item);
                             iIndiceAjoutItem++;
                         }
                         
