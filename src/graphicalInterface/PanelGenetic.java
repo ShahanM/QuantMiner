@@ -13,7 +13,6 @@
  */
 package src.graphicalInterface;
 
-
 import src.apriori.AssociationRule;
 import src.apriori.OptimizerAprioriQual;
 import src.geneticAlgorithm.OptimizerGeneticAlgo;
@@ -28,9 +27,7 @@ import java.awt.event.ActionListener;
 
 
 public class PanelGenetic extends DatabasePanelAssistant { //step 4
-    
-   
-    
+
     private RuleTester m_calculateur = null; //A very important member, it derives from thread
     private int m_iMaxReglesTestees;        //max number of testing rule?
     private int m_iIndiceRegleAffichee;     //Affichee means display--the index of the rule being displayed
@@ -48,6 +45,9 @@ public class PanelGenetic extends DatabasePanelAssistant { //step 4
         
         //indicate that calculation is finished
         public void IndiquerFinCalcul() {
+
+            // TODO update the progress panel with the pruned result if set to true
+
             DialogEndComputeRules fenetreFinCalcul;
 
             if (!ENV.AVERTIR_FIN_CALCUL) //AVERTIR notice finishing calculation
@@ -197,8 +197,6 @@ public class PanelGenetic extends DatabasePanelAssistant { //step 4
         jButtonTravaillerFond.setBounds(440, 170, 300, 26);
 
     }//GEN-END:initComponents
-
-        
     
     //the button of working as a background task
     private void jButtonTravaillerFondActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonTravaillerFondActionPerformed
@@ -208,8 +206,6 @@ public class PanelGenetic extends DatabasePanelAssistant { //step 4
         super.m_contexteResolution.m_fenetreProprietaire.setExtendedState( java.awt.Frame.ICONIFIED );
     }//GEN-LAST:event_jButtonTravaillerFondActionPerformed
 
-    
-    
    //stop calculation
     private void jBoutonArreterActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jBoutonArreterActionPerformed
         ArreterCalculateur(true);
@@ -248,8 +244,7 @@ public class PanelGenetic extends DatabasePanelAssistant { //step 4
         //Causes this thread to begin execution; the Java Virtual Machine calls the run method of this thread. 
         m_calculateur.start();
     }//GEN-LAST:event_jBoutonDemarrerActionPerformed
-    
-    
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jBoutonArreter;
     private javax.swing.JButton jBoutonDemarrer;
@@ -260,7 +255,6 @@ public class PanelGenetic extends DatabasePanelAssistant { //step 4
     private javax.swing.JTextArea jTextAreaContexte;
     private javax.swing.JTextArea jZoneTexteRegles;
     // End of variables declaration//GEN-END:variables
- 
     
     //stop calculation
     private void ArreterCalculateur(boolean bEnregistrerRegles) {
@@ -273,7 +267,7 @@ public class PanelGenetic extends DatabasePanelAssistant { //step 4
             
             if (!m_calculateur.EstResultatDisponible())
                 System.out.println("We are in that dreaded if statement");
-                while (m_calculateur.isAlive()) { System.out.println("wololo");};
+                while (m_calculateur.isAlive()) { System.out.println("wololo");}
 
             if (bEnregistrerRegles)
                 if (super.m_contexteResolution != null)
@@ -282,12 +276,9 @@ public class PanelGenetic extends DatabasePanelAssistant { //step 4
             RafraichirControles();
 
             m_calculateur = null;
-
         }
-        
     }
 
-    
     //append more rules to the rule text being displayed
     private void AjouterRegle(String sNouvelleRegle) {
         jZoneTexteRegles.append(sNouvelleRegle);
@@ -298,13 +289,11 @@ public class PanelGenetic extends DatabasePanelAssistant { //step 4
     	//Appends the given text to the end of the document. Does nothing if the model is null or the string is null or empty. 
         jTextAreaContexte.append(sInfo); 
     }
- 
-    
+
     //refresh
     private void RafraichirControles() {
-        String sIndicateur = null;
-        AssociationRule regle = null;
-        boolean bResultatDisponible = false;
+        AssociationRule regle;
+        boolean bResultatDisponible;
         
         if (m_calculateur != null)
             if (!m_bResultatAffiche) {
@@ -319,10 +308,10 @@ public class PanelGenetic extends DatabasePanelAssistant { //step 4
                     }
                     else {
                         jProgressResolution.setValue( m_calculateur.m_iNombreReglesTestees );
-                        sIndicateur =
-                              String.valueOf( m_calculateur.m_iNombreReglesTestees )
+                        String sIndicateur =
+                                m_calculateur.m_iNombreReglesTestees
                             + " tested rules /  "
-                            + String.valueOf( m_iMaxReglesTestees );
+                            + m_iMaxReglesTestees;
                         jProgressResolution.setString(sIndicateur);
                         jProgressResolution.repaint();
                     }
@@ -331,19 +320,16 @@ public class PanelGenetic extends DatabasePanelAssistant { //step 4
                     do {
                         regle = m_calculateur.ObtenirRegleCalculee(m_iIndiceRegleAffichee);
                         if (regle != null) {
-                            AjouterRegle( String.valueOf(m_iIndiceRegleAffichee + 1) + ".  " );
+                            AjouterRegle((m_iIndiceRegleAffichee + 1) + ".  " );
                             AjouterRegle( regle.toString() );
                             AjouterRegle("\n");
                             m_iIndiceRegleAffichee++;
                         }
-                    }
-                    while (regle != null);
+                    } while (regle != null);
                 }
             }
     }
-    
-    
-    
+
     // Outrepassement de la m�thode m�re pour l'ajustement des champs :
     void ArrangerDisposition() {
         int iDeltaPosX = 0; // Diff�rence de positionnement horizontal entre la position id�ale et celle de l'�diteur de formulaires
@@ -376,16 +362,14 @@ public class PanelGenetic extends DatabasePanelAssistant { //step 4
             super.m_zoneControles.width,
             super.m_zoneControles.height + super.m_zoneControles.y - (jScrollPaneRegles.getY()-iDeltaPosY) );        
     }
-    
-    
+
     // Outrepassement de la m�thode m�re pour des traitements sp�cifiques :
     protected boolean TraitementsSpecifiquesAvantSuivant() {
         ArreterCalculateur(true);
         
         return true;
     }
-    
-    
+
     // Outrepassement de la m�thode m�re pour l'annulation du processus � partir de ce panneau :
     public boolean AnnulerPanneau() {
         ArreterCalculateur(false);

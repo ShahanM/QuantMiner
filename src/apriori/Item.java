@@ -32,10 +32,9 @@ public class Item {
  
     
     public String toString() {
-        String sItem = null;
+        String sItem;
         
         switch (m_iTypeItem) {
-            
             case ITEM_TYPE_QUALITATIF :
                 sItem = "Item Qualitatif";
                 break;
@@ -48,6 +47,6 @@ public class Item {
                 sItem = "Item undefined"; //undefined
         }
         
-        return sItem;        
+        return sItem;
     }
 }

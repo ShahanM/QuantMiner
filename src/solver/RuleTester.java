@@ -71,6 +71,7 @@ public class RuleTester extends Thread { //test rules
     private int m_iNombreDisjonctionsDroite = 0;
 
     // TODO add this as an option the algorithm setup wizard
+    private boolean removeRuleSubset = true;
     private boolean removeRedundantQuant = true; // Flag to remove quantitative item that spans whole domain.
 
     public RuleTester(ResolutionContext contexteResolution, IndicateurCalculRegles indicateurCalcul) {
@@ -226,7 +227,7 @@ public class RuleTester extends Thread { //test rules
 
                     if (m_indicateurCalcul != null) {
                         m_indicateurCalcul.IndiquerNombreReglesATester(iNombreReglesATester);
-                        m_indicateurCalcul.EnvoyerInfo(":  " + String.valueOf(iNombreReglesATester) + " rules.\n\n\n");
+                        m_indicateurCalcul.EnvoyerInfo(":  " + iNombreReglesATester + " rules.\n\n\n");
                     }
                 }
             }
@@ -254,6 +255,30 @@ public class RuleTester extends Thread { //test rules
                     catch (InterruptedException e) {
                         e.printStackTrace();
                     }
+                }
+            }
+            if (removeRuleSubset) {
+                // TODO workout something better than this brute force method to prune the ruleset
+                if (m_indicateurCalcul != null) {
+                    m_indicateurCalcul.EnvoyerInfo("Pruning Rule Set");
+                    m_listeRegles.sort(new Comparator<AssociationRule>() {
+                        @Override
+                        public int compare(AssociationRule o1, AssociationRule o2) {
+                            return Integer.compare(o2.getLeftItems().size(), o1.getLeftItems().size());
+                        }
+                    });
+                    // Collect all the single rule component=
+                    List<AssociationRule> finalRuleList=new ArrayList<>(m_listeRegles);
+                    for (AssociationRule rule : m_listeRegles) {
+                        for (AssociationRule subRule : m_listeRegles) {
+                            if (subRule.isSubRule(rule) && !subRule.equals(rule)) {
+                                System.out.println("Comparing Rules : " + rule.toString() + " with " + subRule.toString());
+                                System.out.println("Removing : " + subRule.toString());
+                                finalRuleList.remove(subRule);
+                            }
+                        }
+                    }
+                    m_listeRegles=finalRuleList;
                 }
             }
         }
@@ -304,7 +329,7 @@ public class RuleTester extends Thread { //test rules
                     m_indicateurCalcul.EnvoyerInfo(".");
             }
         }
-        System.out.println(m_iNombreReglesComptabilisees);
+        // System.out.println(m_iNombreReglesComptabilisees);
         return m_iNombreReglesComptabilisees;
     }
     

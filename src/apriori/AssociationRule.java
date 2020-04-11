@@ -395,33 +395,27 @@ public class AssociationRule {
     }
     
 	public String leftToString() {
-		 StringBuilder sRegle =null;
-		 int iIndiceItem = 0;
-	     Item item = null;
-	     boolean bItemsQualitatifsPresents = false;
-	     int iIndiceDisjonction = 0;
-	     int iNombreDisjonctions = 0;
-	     int iNombreItemsQuantitatifs = 0;
-	     int iNombreItems = 0;
+		 StringBuilder sRegle;
+	     boolean bItemsQualitatifsPresents;
+	     int iIndiceDisjonction;
+	     int iNombreDisjonctions;
+	     int iNombreItemsQuantitatifs;
 	     sRegle = new StringBuilder();
-		 
-	     iNombreItems = m_iNombreItemsGauche;  //number of items on left
+
          List<Item> tItemsRegle = m_tItemsGauche;         //the left items
          iNombreItemsQuantitatifs = CompterItemsGaucheSelonType(Item.ITEM_TYPE_QUANTITATIF); 
          iNombreDisjonctions = m_iNombreDisjonctionsGaucheValides;
          
         //Firstly, write the qualitative items. if more than one exist, concatenate with AND
         boolean bPremierItemInscrit = false;
-        for (iIndiceItem = 0; iIndiceItem < iNombreItems; iIndiceItem++) {
-            item = tItemsRegle.get(iIndiceItem);
+        for (Item item : tItemsRegle) {
             if (item.m_iTypeItem == Item.ITEM_TYPE_QUALITATIF) {
                 if (bPremierItemInscrit)
                     sRegle.append("  AND  "); // "  ET  "
-                sRegle.append(((ItemQualitative) item).toString());
+                sRegle.append(item.toString());
                 bPremierItemInscrit = true;
             }
         }
-
         bItemsQualitatifsPresents = bPremierItemInscrit;   //if has qualitative item
      
          //Next, display quantitative items:
@@ -441,20 +435,17 @@ public class AssociationRule {
                      sRegle.append("( ");
 
                  bPremierItemInscrit = false;
-                 for (iIndiceItem = 0; iIndiceItem < iNombreItems; iIndiceItem++) {
-                     item = tItemsRegle.get(iIndiceItem);
+                 for (Item item : tItemsRegle) {
                      if (item.m_iTypeItem == Item.ITEM_TYPE_QUANTITATIF) {
                          if (bPremierItemInscrit)
                              sRegle.append("  AND  "); //ET
                          sRegle.append(((ItemQuantitative) item).toString(iIndiceDisjonction));
                          bPremierItemInscrit = true;
                      }
-                 }               
-
+                 }
                  if ( (iNombreItemsQuantitatifs > 1) && (iNombreDisjonctions > 1) )
                      sRegle.append(" )");
              }
-
              if ( (bItemsQualitatifsPresents) && (iNombreDisjonctions > 1) )
                      sRegle.append(" ) ");
          }
@@ -917,5 +908,17 @@ public class AssociationRule {
 
         return (this.getRuleStringSet(this.m_tItemsGauche).equals(rule.getRuleStringSet(rule.getLeftItems()))
                 && this.getRuleStringSet(rule.m_tItemsDroite).equals(rule.getRuleStringSet(rule.getRightItems())));
+    }
+
+    public boolean isSubRule(AssociationRule rule){
+        if (rule == null){
+            return false;
+        }
+
+        if (!this.getRuleStringSet(rule.m_tItemsDroite).equals(rule.getRuleStringSet(rule.getRightItems()))){
+            return false;
+        }
+
+        return (this.getRuleStringSet(this.m_tItemsGauche).containsAll(rule.getRuleStringSet(rule.getLeftItems())));
     }
 }
