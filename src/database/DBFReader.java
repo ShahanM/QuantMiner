@@ -13,8 +13,10 @@
  */
 package src.database;
 
-import java.io.*;
-import java.util.*;
+import java.io.DataInputStream;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.Vector;
 
 /**DBF file reader
  */
@@ -306,20 +308,18 @@ public class DBFReader {
 			return null;
 	}
 
-	
 	/**Get the index of a column by name
 	 * @param sNomChamp Column name
 	 * @return int
 	 */
 	public int ObtenirIndiceChamp(String sNomChamp) {
-		int iIndiceChamp = 0;
 		boolean bChampTrouve = false;
 		String sNomChampEnumere = null;
 
 		if (sNomChamp == null)
 			return -1;
 
-		iIndiceChamp = 0;
+		int iIndiceChamp = 0;
 		while ((!bChampTrouve) && (iIndiceChamp < m_iNombreChamps)) {
 			sNomChampEnumere = m_champs[iIndiceChamp].ObtenirNom();
 			if (sNomChamp.equals(sNomChampEnumere))
@@ -364,7 +364,6 @@ public class DBFReader {
 					IgnorerOctets(m_dataInputStream, //ignore the rest record size - 1 bytes
 							m_iTailleEnregistrement - 1); 
 				}
-
 			}
 
 			// mark the end of that file:

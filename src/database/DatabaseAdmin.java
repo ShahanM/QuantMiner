@@ -75,33 +75,16 @@ public class DatabaseAdmin {
     }
     
     public void GestionnaireBaseDeDonneesDBF(String sCheminFichier){
-        DBFReader lecteurDBF = null;
-        DBFReader.DBFChamp champDBF = null;
-        int iIndiceColonne = 0;
-        int iDernierePositionSeparateur = 0;
+        DBFReader lecteurDBF;
+        DBFReader.DBFChamp champDBF;
+        int iIndiceColonne;
         
         InitialiserGestionnaireBaseDeDonnees();
-        
-        if (sCheminFichier==null)
-            return;
-        
-        
-        iDernierePositionSeparateur = sCheminFichier.lastIndexOf( File.separator );
-        
-        //Get the base name of the database file without path, e.g. BASE_TEST.dbf
-        if (iDernierePositionSeparateur == -1)
-            m_sNomBaseDeDonnees = sCheminFichier;
-        else
-            try {
-                m_sNomBaseDeDonnees = sCheminFichier.substring(iDernierePositionSeparateur+1);
-            }
-            catch (IndexOutOfBoundsException e) { m_sNomBaseDeDonnees = null; }
-        
-        m_sNomFichier = sCheminFichier; //m_sNomFichier is the full name of the database file, including path
-        m_sNomFlux = null;
+
+        updateDBBaseName(sCheminFichier);
+
         m_iTypeSource = SOURCE_FICHIER_DBF;
-       
-    
+
         try {
     		//This function gets all field information, i.e. number of fields, type, name. It also gets number of records/rows
     		//This function does not read each row's value
@@ -109,19 +92,17 @@ public class DatabaseAdmin {
         }
         catch (Exception e) {
             lecteurDBF = null;
-            System.out.println(e);
+            e.printStackTrace();
         }
         
         if (lecteurDBF == null) {
             m_sNomBaseDeDonnees = null;
             return;
         }
-        
-       
+
         // Obtain number of rows in that file:
         m_iNombreLignes = lecteurDBF.ObtenirNombreLignes();
-        
-        
+
         // Obtain number of columns in that file:
         m_iNombreColonnesTotales = lecteurDBF.ObtenirNombreChamps();
         
@@ -141,26 +122,19 @@ public class DatabaseAdmin {
                 //At present, all columns are not selected,and by default, we suppose they are item type
                 m_colonnesPrisesEnCompte[iIndiceColonne] =new DescripteurColonnePriseEnCompte(TYPE_VALEURS_COLONNE_ITEM, false);
             }
-
             Arrays.sort(m_tNomsColonnes);
         }
-
-        
         lecteurDBF.close();
     }
 
-    public void GestionnaireBaseDeDonneesCSV(String sCheminFichier){
-    	csvParser = null;
-        int iIndiceColonne;
+    private void updateDBBaseName(String sCheminFichier){
         int iDernierePositionSeparateur;
-        
-        InitialiserGestionnaireBaseDeDonnees();
-        
+
         if (sCheminFichier==null)
             return;
-        
+
         iDernierePositionSeparateur = sCheminFichier.lastIndexOf( File.separator );
-        
+
         //Get the base name of the database file without path, e.g. BASE_TEST.csv
         if (iDernierePositionSeparateur == -1)
             m_sNomBaseDeDonnees = sCheminFichier;
@@ -169,12 +143,21 @@ public class DatabaseAdmin {
                 m_sNomBaseDeDonnees = sCheminFichier.substring(iDernierePositionSeparateur+1);
             }
             catch (IndexOutOfBoundsException e) { m_sNomBaseDeDonnees = null; }
-        
+
         m_sNomFichier = sCheminFichier; //m_sNomFichier is the full name of the database file, including path
         m_sNomFlux = null;
-        m_iTypeSource = SOURCE_FICHIER_CSV;
-       
-    
+    }
+
+    public void GestionnaireBaseDeDonneesCSV(String sCheminFichier){
+    	csvParser = null;
+        int iIndiceColonne;
+
+        InitialiserGestionnaireBaseDeDonnees();
+
+        updateDBBaseName(sCheminFichier);
+
+        m_iTypeSource=SOURCE_FICHIER_CSV;
+
         try {
     		//This function gets information, i.e. number of fields, name. It also gets number of records/rows
     		//This function read each row's value to data
@@ -194,7 +177,6 @@ public class DatabaseAdmin {
         // Obtain number of rows in that file:
         m_iNombreLignes = csvParser.ObtenirNombreLignes();
         
-        
         // Obtain number of columns in that file:
         m_iNombreColonnesTotales = csvParser.ObtenirNombreChamps();
         
@@ -211,10 +193,7 @@ public class DatabaseAdmin {
             }
             Arrays.sort(m_tNomsColonnes);
         }
-
-        
         csvParser.close();
-      
     }
     
     public boolean EstBaseDeDonneesValide() {
@@ -489,7 +468,7 @@ public class DatabaseAdmin {
             return null;
 
         // make a table of correspondance entre noms et indices de champs :
-        //[iIndiceColonne] --> order in data file
+        // [iIndiceColonne] --> order in data file
         tCorrespondanceIndicesChamps = new int [ m_iNombreColonnesTotales ];
         Arrays.fill(tCorrespondanceIndicesChamps, -1);
         for (iIndiceColonne=0; iIndiceColonne < m_iNombreColonnesTotales; iIndiceColonne++) {
@@ -513,7 +492,7 @@ public class DatabaseAdmin {
                     // value ne le contradict pas; sinon il devient quantitatif :
                     if (tTypesChamps[iIndiceColonne] == TYPE_VALEURS_COLONNE_REEL) {
                         if (sValeurItem != null)
-                            if (sValeurItem.trim() != "") { //Returns a copy of the string, with leading and trailing whitespace omitted.
+                            if (!sValeurItem.trim().isEmpty()) { //Returns a copy of the string, with leading and trailing whitespace omitted.
                                 try {
                                     Float.parseFloat(sValeurItem); //Throws: if the string does not contain a parsable float
                                 }
@@ -522,9 +501,7 @@ public class DatabaseAdmin {
                                 }
                             }
                     }
-                    
                 }
-              
             }
 
             iIndiceLigne++;
