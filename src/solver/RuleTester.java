@@ -15,7 +15,10 @@ package src.solver;
 
 import src.apriori.*;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Objects;
 
 public class RuleTester extends Thread { //test rules
     // Classe permettant l'execution d'un code particulier durant le calcul des regles :
@@ -42,9 +45,9 @@ public class RuleTester extends Thread { //test rules
         }
     }
     
-    private ResolutionContext m_contexteResolution = null;
+    private ResolutionContext m_contexteResolution;
     private RuleOptimizer m_optimiseurCourant = null; // Object containing the method of optimizing rules
-    public boolean m_bEnExecution = false;
+    public boolean m_bEnExecution;
     private boolean m_bResultatDisponible;          // Indique qu'un ensemble de regles vient d'etre calcule en totalite
                                                     // Indicate that a set of rule are completely calculated
     private AprioriQuantitative m_apriori = null;
@@ -60,7 +63,7 @@ public class RuleTester extends Thread { //test rules
     public int m_iNombreReglesTestees;      // Compteur du nombre de regles deja testees par l'algorithme
                                             // Count the number of rules already tested by the algorithm
     private List<AssociationRule> m_listeRegles;
-    private ArrayList m_listeAttributsQuant;
+    private ArrayList<AttributQuantitative> m_listeAttributsQuant;
     private IndicateurCalculRegles m_indicateurCalcul;
     private boolean m_bIndiquerFinCalcul;
     
@@ -71,7 +74,7 @@ public class RuleTester extends Thread { //test rules
     private int m_iNombreDisjonctionsDroite = 0;
 
     // TODO add this as an option the algorithm setup wizard
-    private boolean removeRuleSubset = true;
+    private boolean removeRuleSubset = true; // Flag to remove rules which are derived from more general rule
     private boolean removeRedundantQuant = true; // Flag to remove quantitative item that spans whole domain.
 
     public RuleTester(ResolutionContext contexteResolution, IndicateurCalculRegles indicateurCalcul) {
@@ -117,7 +120,6 @@ public class RuleTester extends Thread { //test rules
             default :
                 return;    
         }
-                
         
         if (m_contexteResolution.m_gestionnaireBD == null)
             return;
@@ -144,50 +146,51 @@ public class RuleTester extends Thread { //test rules
             m_optimiseurCourant.DefinirContexteResolution(m_contexteResolution);
         }
     }
+
+    private void displayInfo(String msg){
+        if (m_indicateurCalcul != null){
+            m_indicateurCalcul.EnvoyerInfo(msg);
+        }
+    }
     
     //start to do optimization
     public void run() {
-        int iTypePriseEnCompte = 0;
-        int iIndiceAttributsQuant = 0;
-        int iNombreAttributsQuantBase = 0;
-        AttributQuantitative attributQuant = null;
-
-        int iTailleFrequents = 0;
-        int iNombreReglesATester = 0;
-        
-        
-        m_iNombreReglesTestees = 0;
-        m_bResultatDisponible = false;
 
         if (m_apriori == null)
             return;
 
+        int iTypePriseEnCompte;
+        int iIndiceAttributsQuant;
+        int iNombreAttributsQuantBase;
+        AttributQuantitative attributQuant;
+
+        int iTailleFrequents;
+        int iNombreReglesATester;
+
+        m_iNombreReglesTestees = 0;
+        m_bResultatDisponible = false;
+
         boolean bFinInitApriori = false;
         m_bEnExecution = true;
         iTailleFrequents = 2;
-        
-        if (m_indicateurCalcul != null)
-            m_indicateurCalcul.EnvoyerInfo("Pre-computation with the Apriori algorithm:\n");
+
+        displayInfo("Pre-computation with the Apriori algorithm:\n");
 
         try {
-        
             while ( (m_bEnExecution) && (!bFinInitApriori) && ( iTailleFrequents <= 3)) {   // suppress later the third condition
 
                 // On genere les listes de K-items frequency successively:     
             	// We generate the list of the frequency of K-items successively:
-                if (m_indicateurCalcul != null)
-                    m_indicateurCalcul.EnvoyerInfo("  Computing the set of " + iTailleFrequents + " consecutive frequent modalities...");
-                
-                bFinInitApriori = !m_apriori.GenererNouvelleListeItemSets();
-                
-                if (m_indicateurCalcul != null) {
-                    if (bFinInitApriori)
-                        m_indicateurCalcul.EnvoyerInfo("FINISH!\n");
-                    else
-                        m_indicateurCalcul.EnvoyerInfo("OK\n");
-                }
-                iTailleFrequents++;
+                displayInfo("  Computing the set of " + iTailleFrequents + " consecutive frequent modalities...");
 
+                bFinInitApriori = !m_apriori.GenererNouvelleListeItemSets();
+
+                if (bFinInitApriori)
+                    displayInfo("FINISH!\n");
+                else
+                    displayInfo("OK\n");
+
+                iTailleFrequents++;
 
                 if (bFinInitApriori || ( iTailleFrequents > 3) ) { // suppress later the second condition
 
@@ -195,32 +198,29 @@ public class RuleTester extends Thread { //test rules
 
                     // On repertorie uniquement les attributs quantitatifs a prendre en compte :
                     // we list only the quantitative attributes to consider: 
-                    m_listeAttributsQuant = new ArrayList();
+                    m_listeAttributsQuant = new ArrayList<>();
                     m_iNombreTotalAttributsQuant = 0;
 
                     if (m_iMaximumItemsQuantConsideres > 0) {
 
-                        iNombreAttributsQuantBase = m_apriori.ObtenirNombreAttributsQuantitatifs();
-                        for (iIndiceAttributsQuant = 0; iIndiceAttributsQuant < iNombreAttributsQuantBase; iIndiceAttributsQuant++) {
-                            attributQuant = m_apriori.ObtenirAttributQuantitatif(iIndiceAttributsQuant);
+                        iNombreAttributsQuantBase=m_apriori.ObtenirNombreAttributsQuantitatifs();
+                        for (iIndiceAttributsQuant=0; iIndiceAttributsQuant < iNombreAttributsQuantBase; iIndiceAttributsQuant++) {
+                            attributQuant=m_apriori.ObtenirAttributQuantitatif(iIndiceAttributsQuant);
                             if (attributQuant != null) {
-                                iTypePriseEnCompte = m_contexteResolution.ObtenirTypePrisEnCompteAttribut(attributQuant.ObtenirNom());
+                                iTypePriseEnCompte=m_contexteResolution.ObtenirTypePrisEnCompteAttribut(attributQuant.ObtenirNom());
 
                                 if (iTypePriseEnCompte != ResolutionContext.PRISE_EN_COMPTE_ITEM_NULLE_PART) {
                                     m_listeAttributsQuant.add(attributQuant);
-                                    m_iNombreTotalAttributsQuant++;                        
-                               }
+                                    m_iNombreTotalAttributsQuant++;
+                                }
                             }
                         }
 
                         if (m_iMaximumItemsQuantConsideres > m_iNombreTotalAttributsQuant)
-                            m_iMaximumItemsQuantConsideres = m_iNombreTotalAttributsQuant;
+                            m_iMaximumItemsQuantConsideres=m_iNombreTotalAttributsQuant;
                     }
 
-
-                    // Calculate the number of rules to test:
-                    if (m_indicateurCalcul != null)
-                        m_indicateurCalcul.EnvoyerInfo("\n\nComputing the number of rules to test...");
+                    displayInfo("\n\nComputing the number of rules to test...");
 
                     //number of rules to test
                     iNombreReglesATester = ComptabiliserNombreMaxReglesTestees();
@@ -242,10 +242,9 @@ public class RuleTester extends Thread { //test rules
                 m_iIndiceRepartitionItems = 0;
                 m_bFinTestRegles = false;
                 m_bModeSpecialComptabilisationRegles = false;
-      
-                if (m_indicateurCalcul != null)
-                	//print the information of the context to the context text area
-                    m_indicateurCalcul.EnvoyerInfo( m_contexteResolution.ObtenirInfosContexte(false) );
+
+                //print the information of the context to the context text area
+                displayInfo(m_contexteResolution.ObtenirInfosContexte(false));
 
                 while ( (m_bEnExecution) && (!m_bFinTestRegles) ) {
                     //Calculate new rule
@@ -259,34 +258,31 @@ public class RuleTester extends Thread { //test rules
             }
             if (removeRuleSubset) {
                 // TODO workout something better than this brute force method to prune the ruleset
-                if (m_indicateurCalcul != null) {
-                    m_indicateurCalcul.EnvoyerInfo("Pruning Rule Set");
-                    m_listeRegles.sort(new Comparator<AssociationRule>() {
-                        @Override
-                        public int compare(AssociationRule o1, AssociationRule o2) {
-                            return Integer.compare(o2.getLeftItems().size(), o1.getLeftItems().size());
-                        }
-                    });
-                    // Collect all the single rule component=
-                    List<AssociationRule> finalRuleList=new ArrayList<>(m_listeRegles);
-                    for (AssociationRule rule : m_listeRegles) {
-                        for (AssociationRule subRule : m_listeRegles) {
-                            if (subRule.isSubRule(rule) && !subRule.equals(rule)) {
-                                System.out.println("Comparing Rules : " + rule.toString() + " with " + subRule.toString());
-                                System.out.println("Removing : " + subRule.toString());
-                                finalRuleList.remove(subRule);
-                            }
+                displayInfo("Pruning Rule Set");
+                m_listeRegles.sort(new Comparator<AssociationRule>() {
+                    @Override
+                    public int compare(AssociationRule o1, AssociationRule o2) {
+                        return Integer.compare(o2.getLeftItems().size(), o1.getLeftItems().size());
+                    }
+                });
+                // Collect all the single rul e component
+                List<AssociationRule> finalRuleList=new ArrayList<>(m_listeRegles);
+                for (AssociationRule rule : m_listeRegles) {
+                    for (AssociationRule subRule : m_listeRegles) {
+                        if (subRule.isSubRule(rule) && !subRule.equals(rule)) {
+                            displayInfo("Comparing Rules : " + rule.toString() + " with "
+                                    + subRule.toString() + "\n");
+                            displayInfo("Removing : " + subRule.toString() + "\n");
+                            finalRuleList.remove(subRule);
                         }
                     }
-                    m_listeRegles=finalRuleList;
                 }
+                m_listeRegles=finalRuleList;
             }
         }
         catch (java.lang.OutOfMemoryError e) {
-            if (m_indicateurCalcul != null) {
-                m_indicateurCalcul.EnvoyerInfo( "\n\n\nDEPASSEMENT DES CAPACITES MEMOIRE !" );
-                m_indicateurCalcul.EnvoyerInfo( "\nPlease intensify filtering or reduce the minimum support...\n" );
-            }
+            displayInfo( "\n\n\nDEPASSEMENT DES CAPACITES MEMOIRE !" );
+            displayInfo( "\nPlease intensify filtering or reduce the minimum support...\n" );
         }
         
         m_bResultatDisponible = true;
@@ -297,7 +293,6 @@ public class RuleTester extends Thread { //test rules
     }
     //END OF RUN
 
-    
     // Simule une optimisation afin de compter le nombre de regles qui seront testees :
     // Simulate an optimization to count the number of rules that will be tested
     private int ComptabiliserNombreMaxReglesTestees() {
@@ -323,7 +318,7 @@ public class RuleTester extends Thread { //test rules
                 try { sleep(1); }
                 catch (InterruptedException e) {
                     e.printStackTrace();
-                };
+                }
                 iNombreNouvellesBoucles = 0;
                 if (m_indicateurCalcul != null)
                     m_indicateurCalcul.EnvoyerInfo(".");
@@ -336,8 +331,6 @@ public class RuleTester extends Thread { //test rules
     //calculate new rules
     private void CalculerNouvelleRegle() {
         ItemSet itemSetFrequent = null;
-        AttributQuantitative attributQuant;
-        int iIndiceAttributQuant;
         boolean [] tRepartitionItems;
         int iIndiceAttributQuantAjoute = 0;
         boolean [] tCombinaisonItemsQuant = null;
@@ -379,14 +372,16 @@ public class RuleTester extends Thread { //test rules
             
         if (m_iNombreItemsQuantConsideres > 0) {
 
-            tCombinaisonItemsQuant = AprioriQuantitative.CalculerEnsemblesItems(m_iIndiceCombinaisonItemsQuant, m_iNombreTotalAttributsQuant, m_iNombreItemsQuantConsideres);
+            tCombinaisonItemsQuant = AprioriQuantitative.CalculerEnsemblesItems(m_iIndiceCombinaisonItemsQuant,
+                    m_iNombreTotalAttributsQuant, m_iNombreItemsQuantConsideres);
             if (tCombinaisonItemsQuant==null) {
-                if (m_iTailleFrequent == 0) { // Cas ou on testait des regles 100% quantitatives // case where we tested pure quantitative rules
+                if (m_iTailleFrequent == 0) {   // Cas ou on testait des regles 100% quantitatives
+                                                // case where we tested pure quantitative rules
                     m_iTailleFrequent++;
                     m_iIndiceFrequent = 0;
+                } else {
+                    m_iIndiceFrequent++;
                 }
-                else 
-                m_iIndiceFrequent++;
                 m_iIndiceCombinaisonItemsQuant = 0;
                 m_iIndiceRepartitionItems = 0;
                 return;
@@ -401,7 +396,7 @@ public class RuleTester extends Thread { //test rules
         // Calculate repartition of items on the right and left. In the table
         // where each index corresponds to an item (the first "iTailleFrequent" are the qualitative items
         // we will place the items having "true" value in their corresponding table cell 
-        // in the right side of the ru;e, the rest going to the right side.
+        // in the right side of the rule, the rest going to the right side.
         tRepartitionItems = AprioriQuantitative.CalculerRepartitionItems(m_iIndiceRepartitionItems,
                 m_iTailleFrequent+m_iNombreItemsQuantConsideres);
 
@@ -417,18 +412,16 @@ public class RuleTester extends Thread { //test rules
             // Construction du schema de la rule optimiser :
             // Construct rule optimizer scheme
 
-            // Number of items in the rule, qualitatifs and quantitatifs
-            int iNombreItems = m_iTailleFrequent + m_iNombreItemsQuantConsideres;
-
             // On compte le nombre d'items qu'on va placer a gauche :
             // We count the number of items to be placed on the left:
             int iNombreItemsGauche = 0;
             int iNombreItemsDroite = 0;
-            for (int iIndiceItemRegle = 0; iIndiceItemRegle < iNombreItems; iIndiceItemRegle++) {
-                if (tRepartitionItems[iIndiceItemRegle])
+            for(boolean repartitionItem : tRepartitionItems){
+                if (repartitionItem){
                     iNombreItemsGauche++;
-                else 
+                } else {
                     iNombreItemsDroite++;
+                }
             }
 
             //create a new rule template
@@ -441,8 +434,7 @@ public class RuleTester extends Thread { //test rules
                 ItemQualitative itemQual = Objects.requireNonNull(itemSetFrequent).ObtenirItem(iIndiceItemRegle);
                 if (tRepartitionItems[iIndiceItemRegle]) {
                     regle.AssignerItemGauche(itemQual);
-                }
-                else {
+                } else {
                     regle.AssignerItemDroite(itemQual);
                 }
             }
@@ -450,9 +442,9 @@ public class RuleTester extends Thread { //test rules
             // On specifie les attributs quantitatifs :
             // We specify all quantitative items:
             if (m_iNombreItemsQuantConsideres > 0) {
-                for (iIndiceAttributQuant = 0; iIndiceAttributQuant < m_iNombreTotalAttributsQuant; iIndiceAttributQuant++) {
+                for (int iIndiceAttributQuant = 0; iIndiceAttributQuant < m_iNombreTotalAttributsQuant; iIndiceAttributQuant++) {
                     if (Objects.requireNonNull(tCombinaisonItemsQuant)[iIndiceAttributQuant]) {
-                        attributQuant = (AttributQuantitative)(m_listeAttributsQuant.get(iIndiceAttributQuant));
+                        AttributQuantitative attributQuant = (m_listeAttributsQuant.get(iIndiceAttributQuant));
                         if (tRepartitionItems[m_iTailleFrequent + iIndiceAttributQuantAjoute]) {
                             ItemQuantitative itemQuant = new ItemQuantitative(attributQuant, m_iNombreDisjonctionsGauche);
                             regle.AssignerItemGauche(itemQuant);
@@ -489,8 +481,11 @@ public class RuleTester extends Thread { //test rules
                                 }
                             }
                             for (Item item : itemsToRemove) {
-                                if (regle.removeLeftItem(item)) {
-                                    System.out.println("Removed item " + item);
+                                if (regle.getLeftItems().size() > 1) {
+                                    if (regle.removeLeftItem(item)) {
+                                        displayInfo("Removed " + item + " from "
+                                                + regle.getLeftItems().toString() + "\n");
+                                    }
                                 }
                             }
                             if (!m_listeRegles.contains(regle)) {
@@ -528,5 +523,4 @@ public class RuleTester extends Thread { //test rules
     public boolean EstResultatDisponible() {
         return m_bResultatDisponible;
     }
-
 }

@@ -14,28 +14,29 @@
 
 package src.apriori;
 
-import java.sql.*;
-import java.util.*;
-import java.util.*;
+import src.database.DataColumn;
+import src.database.DatabaseAdmin;
+import src.solver.ResolutionContext;
 
-import src.database.*;
-import src.solver.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 
 public class AprioriQuantitative {
 
-    ArrayList m_listeAttributsQual = null;
-    ArrayList m_listeAttributsQuant = null;
+    ArrayList<AttributQualitative> m_listeAttributsQual;
+    ArrayList<AttributQuantitative> m_listeAttributsQuant;
 
-    TableItems m_tableItems = null;
-    ArrayList m_listeListeItemSets = null;
+    TableItems m_tableItems;
+    ArrayList m_listeListeItemSets;
 
-    public DatabaseAdmin m_gestionnaireBD = null;
-    private ResolutionContext m_contexteResolution = null;
+    public DatabaseAdmin m_gestionnaireBD;
+    private ResolutionContext m_contexteResolution;
     
     
-    float m_fMinSupp = 0.0f;
-    int m_iNombreTransactions = 0;
+    float m_fMinSupp;
+    int m_iNombreTransactions;
     
     
     // Classe de base permettant l'ex�cution d'un code particulier pendant la g�n�ration des itemsets :
@@ -43,88 +44,72 @@ public class AprioriQuantitative {
         // Renvoie faux si le traitement externe demande l'arr�t des calculs :
         public boolean ExecuterTraitementExterne() { return true; }
     }
-    TraitementExternePendantCalcul m_traitementExterne = null;
-    
-    
-    
+    TraitementExternePendantCalcul m_traitementExterne;
+
     public AprioriQuantitative(ResolutionContext contexteResolution) {
-        m_listeAttributsQual = new ArrayList();
-        m_listeAttributsQuant = new ArrayList();
+        m_listeAttributsQual = new ArrayList<>();
+        m_listeAttributsQuant = new ArrayList<>();
         m_tableItems = new TableItems();
         m_listeListeItemSets = new ArrayList();
         m_fMinSupp = 0.0f;
         m_iNombreTransactions = 0;
         m_traitementExterne = null;
+        m_gestionnaireBD = null;
         
         m_contexteResolution = contexteResolution;
         if (m_contexteResolution != null)
             m_gestionnaireBD = m_contexteResolution.m_gestionnaireBD;
     }
-    
-    
+
     /** specify external treatment
      * @param traitementExterne External Treatment For Calculating
      */
     public void SpecifierTraitementExterne(TraitementExternePendantCalcul traitementExterne) {
         m_traitementExterne = traitementExterne;
     }
-    
-    
+
     /**
      * Run Pretreatment
      * @param bGenererItemSetsSingletons
      */
     public void ExecuterPretraitement(boolean bGenererItemSetsSingletons) {
-        int iNombreAttributsQual = 0;
-        int iIndiceAttributQual = 0;
-        int iNombreColonnes = 0;
-        int iIndiceColonne = 0;
-        int iTypePriseEnCompte = 0;
-        AttributQualitative attributQual = null;
-        AttributQuantitative attributQuant = null;
-        DataColumn colonneDonnees = null;
+        int iTypePriseEnCompte;
+        AttributQualitative attributQual;
+        AttributQuantitative attributQuant;
+        DataColumn colonneDonnees;
         m_iNombreTransactions = m_gestionnaireBD.ObtenirNombreLignes();  //obtain the number of lines
         
-        iNombreColonnes = m_gestionnaireBD.ObtenirNombreColonnesPrisesEnCompte(); //obtain the number of selected columns??
+        int iNombreColonnes = m_gestionnaireBD.ObtenirNombreColonnesPrisesEnCompte(); //obtain the number of selected columns??
         
-        for (iIndiceColonne = 0; iIndiceColonne < iNombreColonnes; iIndiceColonne++) { 
+        for (int iIndiceColonne = 0; iIndiceColonne < iNombreColonnes; iIndiceColonne++) {
             
             colonneDonnees = m_gestionnaireBD.ObtenirColonneBDPriseEnCompte(iIndiceColonne);
             iTypePriseEnCompte = m_contexteResolution.ObtenirTypePrisEnCompteAttribut(colonneDonnees.m_sNomColonne);
             
-            switch ( colonneDonnees.m_iTypeValeurs) {
+            switch (colonneDonnees.m_iTypeValeurs) {
                 case DatabaseAdmin.TYPE_VALEURS_COLONNE_ITEM : //add categorical attribute to categorical list
                     if (iTypePriseEnCompte != ResolutionContext.PRISE_EN_COMPTE_ITEM_NULLE_PART) {
-                        attributQual = new AttributQualitative( colonneDonnees.m_sNomColonne, colonneDonnees );
+                        attributQual = new AttributQualitative(colonneDonnees.m_sNomColonne, colonneDonnees );
                         m_listeAttributsQual.add(attributQual);
                     }
                     break;
                     
                 case DatabaseAdmin.TYPE_VALEURS_COLONNE_REEL : //add quantitative attribute to categorical list
                     if (iTypePriseEnCompte != ResolutionContext.PRISE_EN_COMPTE_ITEM_NULLE_PART) {
-                        attributQuant = new AttributQuantitative( colonneDonnees.m_sNomColonne, colonneDonnees );
+                        attributQuant = new AttributQuantitative(colonneDonnees.m_sNomColonne, colonneDonnees );
                         m_listeAttributsQuant.add(attributQuant);
                     }
                     break;
             }
-             
+        }
+        for (AttributQualitative attrQual : m_listeAttributsQual){
+            attrQual.GenererItems(m_tableItems);
         }
 
-        iNombreAttributsQual = m_listeAttributsQual.size();
-        iIndiceAttributQual = 0;
-        for (iIndiceAttributQual = 0; iIndiceAttributQual < iNombreAttributsQual; iIndiceAttributQual++) {
-            
-            attributQual = (AttributQualitative)m_listeAttributsQual.get(iIndiceAttributQual);
-            attributQual.GenererItems(m_tableItems);
-        
-        }
-
-        
         if (bGenererItemSetsSingletons)
             GenererNouvelleListeItemSets();  //generate new itemset list
     }
-  
-    
+
    /**
     * Calculate Distribution Items
     * @param iIndiceRepartition Index Distribution
@@ -189,20 +174,19 @@ public class AprioriQuantitative {
      * @param iNombrePlaces Number of places
      */
     public static boolean [] CalculerEnsemblesItems(int iIndiceRepartition, int iNombreItems, int iNombrePlaces) {
-        boolean [] tRepartitionItems = null;
-        boolean bItemAffecte = false;        
-        int iIndiceItem = 0;
+        boolean [] tRepartitionItems;
+        boolean bItemAffecte = false;
         int iNombreItemsRestants = 0;
         int iNombrePlacesRestantes = 0;
         int iCompteur = 0;
         int factN = 0, factP = 0, factN_P = 0, iCNP = 0; // Variables d�di�es au calcul des combinaisons de p valeurs parmi n
         
         if (iNombreItems==0) return null;
- 
+
         tRepartitionItems = new boolean [iNombreItems];
         Arrays.fill(tRepartitionItems, false);
         
-        iIndiceItem = 0;
+        int iIndiceItem = 0;
         iNombreItemsRestants = iNombreItems;
         iNombrePlacesRestantes = iNombrePlaces;
         while ( (iNombrePlacesRestantes>0) && (iNombreItemsRestants>=iNombrePlacesRestantes) && (iIndiceItem<iNombreItems) ) {
@@ -414,8 +398,7 @@ public class AprioriQuantitative {
             }        
                 
         }
-            
-        
+
         // Combinaisons d'items :
         else {
             
@@ -621,11 +604,10 @@ public class AprioriQuantitative {
         else
             return null;
     }
-    
-        
+
     /**
      * Obtain quantitative attributes
-     * @param iIndiceQuant Index of the quantitative attribute
+     * @param iIndiceQuant - Index of the Quantitative Attribute
      * @return Quantitative attribute
      */
     public AttributQuantitative ObtenirAttributQuantitatif(int iIndiceQuant) {
@@ -634,20 +616,17 @@ public class AprioriQuantitative {
         else
             return null;
     }
-    
-    
-    
+
     public int ObtenirNombreAttributsQuantitatifs() {
         if (m_listeAttributsQuant==null)
             return 0;
         else
             return m_listeAttributsQuant.size();
     }
-    
-    
+
     /**
      * Obtaining quantitative attributes by Name
-     * @param sNomAttributQuant
+     * @param sNomAttributQuant - name of the Quantitative Attribute
      * @return quantitative attribute
      */
     public AttributQuantitative ObtenirAttributQuantitatifDepuisNom(String sNomAttributQuant) {

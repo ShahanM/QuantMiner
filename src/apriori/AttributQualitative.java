@@ -125,10 +125,7 @@ public class AttributQualitative {
     
 
     void GenererItems(TableItems tableItems) {
-        
-        int iIndiceValeur = 0;
-        
-        for (iIndiceValeur = 0; iIndiceValeur < m_iNombreValeurs; iIndiceValeur++)
+        for (int iIndiceValeur = 0; iIndiceValeur < m_iNombreValeurs; iIndiceValeur++)
             tableItems.DeclarerItemQualitatif(this, (short)iIndiceValeur);
     }
 
